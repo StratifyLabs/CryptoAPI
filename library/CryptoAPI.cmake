@@ -1,4 +1,4 @@
 
-include(targets/StratifyAPI)
+include(targets/InetAPI)
 
-sos_sdk_include_target(Crypto "${STRATIFYAPI_CONFIG_LIST}")
+sos_sdk_include_target(CryptoAPI "${STRATIFYAPI_CONFIG_LIST}")
