@@ -79,14 +79,14 @@ public:
 
   bool aes_api_case() {
 
-    PrinterObject po(printer(), "aes_api_case()");
+    Printer::Object po(printer(), "aes_api_case()");
     const Data key128 = Data::from_string("E8E9EAEBEDEEEFF0F2F3F4F5F7F8F9FA");
     const Data key256 = Data::from_string(
       "08090A0B0D0E0F10121314151718191A1C1D1E1F21222324262728292B2C2D2E");
     const Data plain128 = Data::from_string("014BAF2278A69D331D5180103643E99A");
     const Data plain256 = Data::from_string("069A007FC76A459F98BAF917FEDF9521");
     {
-      PrinterObject po(printer(), "ecb");
+      Printer::Object po(printer(), "ecb");
 
       const Data cipher128
         = Data::from_string("6743C3D1519AB4F2CD9A78AB09A511BD");
@@ -114,7 +114,7 @@ public:
     }
 
     {
-      PrinterObject po(printer(), "cbc");
+      Printer::Object po(printer(), "cbc");
       const Data iv = Data::from_string("E8E9EAEBEDEEEFF0F2F3F4F5F7F8F9FA");
 
       const Data cipher128
@@ -150,7 +150,7 @@ public:
         == plain256);
 
       {
-        PrinterObject po(printer(), "cbc-file");
+        Printer::Object po(printer(), "cbc-file");
 
         TEST_ASSERT(
           View(DataFile()
