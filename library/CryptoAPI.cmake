@@ -1,4 +1,5 @@
 
-include(targets/InetAPI)
-
-sos_sdk_include_target(CryptoAPI "${STRATIFYAPI_CONFIG_LIST}")
+if(NOT DEFINED IS_SDK)
+	include(InetAPI)
+	sos_sdk_include_target(CryptoAPI "${STRATIFYAPI_CONFIG_LIST}")
+endif()
