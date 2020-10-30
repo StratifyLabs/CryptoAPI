@@ -61,7 +61,7 @@ public:
     }
 
     var::KeyString get_key128_string() const {
-      return var::View(m_key).to_string().string_view();
+      return var::StringView(var::View(m_key).to_string().cstring(), 32);
     }
 
     var::KeyString initialization_vector_string() const {
@@ -89,6 +89,11 @@ public:
 
   const InitializationVector &initialization_vector() const {
     return m_initialization_vector;
+  }
+
+  static size_t get_padding(size_t input_size) {
+    const size_t tmp = input_size % 16;
+    return tmp ? (16 - tmp) : 0;
   }
 
   class Crypt {
@@ -181,5 +186,10 @@ public:
 };
 
 } // namespace crypto
+
+namespace printer {
+class Printer;
+Printer &operator<<(Printer &printer, const crypto::Aes::Key &a);
+} // namespace printer
 
 #endif // CRYPTOAPI_CRYPTO_AES_HPP_

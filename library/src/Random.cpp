@@ -15,6 +15,7 @@ Random::Random() {
   } else {
     API_RETURN_IF_ERROR();
     API_SYSTEM_CALL("random", api()->init(&m_context));
+    API_RETURN_IF_ERROR();
     seed(var::View());
   }
 }
@@ -37,18 +38,17 @@ Random &Random::seed() {
 
 Random &Random::seed(const var::View source_data) {
   API_RETURN_VALUE_IF_ERROR(*this);
-  API_SYSTEM_CALL(
-    "",
-    api()->seed(m_context, source_data.to_const_u8(), source_data.size()));
+  API_ASSERT(m_context != nullptr);
+  API_SYSTEM_CALL("", api()->seed(m_context, source_data.to_const_u8(),
+                                  source_data.size()));
   return *this;
 }
 
 const Random &Random::randomize(var::View destination_data) const {
   API_RETURN_VALUE_IF_ERROR(*this);
-  API_SYSTEM_CALL(
-    "",
-    api()
-      ->random(m_context, destination_data.to_u8(), destination_data.size()));
+  API_ASSERT(m_context != nullptr);
+  API_SYSTEM_CALL("", api()->random(m_context, destination_data.to_u8(),
+                                    destination_data.size()));
   return *this;
 }
 
