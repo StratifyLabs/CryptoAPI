@@ -3,6 +3,8 @@
 
 #include <errno.h>
 
+#include <var.hpp>
+
 #include "crypto/Aes.hpp"
 #include "crypto/Random.hpp"
 
@@ -60,6 +62,7 @@ Aes &Aes::set_key256(const var::View &key) {
 const Aes &Aes::encrypt_ecb(const Crypt &options) const {
   API_RETURN_VALUE_IF_ERROR(*this);
   API_ASSERT(options.cipher().size() == options.plain().size());
+  API_ASSERT(options.cipher().size() % 16 == 0);
 
   for (u32 i = 0; i < options.plain().size(); i += 16) {
     if (
@@ -79,10 +82,7 @@ const Aes &Aes::encrypt_ecb(const Crypt &options) const {
 const Aes &Aes::decrypt_ecb(const Crypt &options) const {
   API_RETURN_VALUE_IF_ERROR(*this);
   API_ASSERT(options.cipher().size() == options.plain().size());
-
-  if (options.cipher().size() % 16 != 0) {
-    API_RETURN_VALUE_ASSIGN_ERROR(*this, "", EINVAL);
-  }
+  API_ASSERT(options.cipher().size() % 16 == 0);
 
   for (u32 i = 0; i < options.cipher().size(); i += 16) {
 
@@ -104,15 +104,13 @@ const Aes &Aes::decrypt_ecb(const Crypt &options) const {
 const Aes &Aes::encrypt_cbc(const Crypt &options) const {
   API_RETURN_VALUE_IF_ERROR(*this);
   API_ASSERT(options.cipher().size() == options.plain().size());
+  API_ASSERT(options.cipher().size() % 16 == 0);
 
   API_SYSTEM_CALL(
-    "",
-    api()->encrypt_cbc(
-      m_context,
-      options.plain().size(),
-      m_initialization_vector.data(), // init vector
-      options.plain().to_const_u8(),
-      options.cipher().to_u8()));
+      "", api()->encrypt_cbc(m_context, options.plain().size(),
+                             m_initialization_vector.data(), // init vector
+                             options.plain().to_const_u8(),
+                             options.cipher().to_u8()));
 
   return *this;
 }
@@ -120,10 +118,7 @@ const Aes &Aes::encrypt_cbc(const Crypt &options) const {
 const Aes &Aes::decrypt_cbc(const Crypt &options) const {
   API_RETURN_VALUE_IF_ERROR(*this);
   API_ASSERT(options.cipher().size() == options.plain().size());
-
-  if (options.cipher().size() % 16 != 0) {
-    API_RETURN_VALUE_ASSIGN_ERROR(*this, "", EINVAL);
-  }
+  API_ASSERT(options.cipher().size() % 16 == 0);
 
   API_SYSTEM_CALL(
     "",
@@ -146,7 +141,7 @@ int AesCbcEncrypter::transform(
 
 int AesCbcDecrypter::transform(
   const var::Transformer::Transform &options) const {
-  decrypt_cbc(Crypt().set_plain(options.input()).set_cipher(options.output()));
+  decrypt_cbc(Crypt().set_cipher(options.input()).set_plain(options.output()));
   API_RETURN_VALUE_IF_ERROR(-1);
   return options.input().size();
 }

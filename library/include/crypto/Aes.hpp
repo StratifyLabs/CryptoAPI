@@ -8,18 +8,70 @@
 #include <api/api.hpp>
 #include <fs/File.hpp>
 #include <var/Data.hpp>
+#include <var/StackString.hpp>
 
 #if defined __link && !defined CRYPT_AES_API_REQUEST
 #include <mbedtls_api.h>
 #define CRYPT_AES_API_REQUEST &mbedtls_crypt_aes_api
 #endif
 
+#include "Random.hpp"
+
 namespace crypto {
 
 class Aes : public api::ExecutionContext {
 public:
   using InitializationVector = var::Array<u8, 16>;
+  using Key256 = var::Array<u8, 32>;
+  using Key128 = var::Array<u8, 16>;
   using Iv = InitializationVector;
+
+  class Key {
+  public:
+    class Construct {
+      API_AC(Construct, var::StringView, key);
+      API_AC(Construct, var::StringView, initialization_vector);
+    };
+
+    explicit Key(const Construct &options) {
+      var::View(m_key).copy(var::Data::from_string(options.key()));
+      var::View(m_initialization_vector)
+          .copy(var::Data::from_string(options.initialization_vector()));
+    }
+
+    Key() {
+      // 256-bit key length
+      Random().seed().randomize(var::View(m_key));
+      Random().seed().randomize(var::View(m_initialization_vector));
+    }
+
+    Key256 key256() const { return m_key; }
+    Key128 key128() const {
+      Key128 result;
+      var::View(result).copy(m_key);
+      return result;
+    }
+
+    const InitializationVector &initialization_vector() const {
+      return m_initialization_vector;
+    }
+
+    var::GeneralString get_key256_string() const {
+      return var::View(m_key).to_string().string_view();
+    }
+
+    var::KeyString get_key128_string() const {
+      return var::View(m_key).to_string().string_view();
+    }
+
+    var::KeyString initialization_vector_string() const {
+      return var::View(m_initialization_vector).to_string().string_view();
+    }
+
+  private:
+    Key256 m_key;
+    InitializationVector m_initialization_vector;
+  };
 
   Aes();
   ~Aes();
@@ -120,7 +172,7 @@ public:
 };
 
 class AesCbcDecrypter : public var::Transformer,
-                        public AesAccess<AesCbcEncrypter> {
+                        public AesAccess<AesCbcDecrypter> {
 public:
   int transform(
     const var::Transformer::Transform &options) const override final;
