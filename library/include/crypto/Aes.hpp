@@ -64,7 +64,7 @@ public:
       return var::StringView(var::View(m_key).to_string().cstring(), 32);
     }
 
-    var::KeyString initialization_vector_string() const {
+    var::KeyString get_initialization_vector_string() const {
       return var::View(m_initialization_vector).to_string().string_view();
     }
 

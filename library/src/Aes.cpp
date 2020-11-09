@@ -14,7 +14,7 @@ Printer &operator<<(Printer &printer, const crypto::Aes::Key &a) {
   printer.key("key128", a.get_key128_string().string_view());
   printer.key("key256", a.get_key256_string().string_view());
   printer.key("initializationVector",
-              a.initialization_vector_string().string_view());
+              a.get_initialization_vector_string().string_view());
   return printer;
 }
 } // namespace printer
