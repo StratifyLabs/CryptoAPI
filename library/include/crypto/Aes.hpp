@@ -110,13 +110,13 @@ public:
   var::Data encrypt_ecb(var::View input) const {
     var::Data result(input.size());
     encrypt_ecb(Crypt().set_plain(input).set_cipher(var::View(result)));
-    return std::move(result);
+    return result;
   }
 
   var::Data decrypt_ecb(var::View input) const {
     var::Data result(input.size());
     decrypt_ecb(Crypt().set_cipher(input).set_plain(var::View(result)));
-    return std::move(result);
+    return result;
   }
 
   using EncryptCbc = Crypt;
@@ -128,13 +128,13 @@ public:
   var::Data encrypt_cbc(var::View input) const {
     var::Data result(input.size());
     encrypt_cbc(Crypt().set_plain(input).set_cipher(var::View(result)));
-    return std::move(result);
+    return result;
   }
 
   var::Data decrypt_cbc(var::View input) const {
     var::Data result(input.size());
     decrypt_cbc(Crypt().set_cipher(input).set_plain(var::View(result)));
-    return std::move(result);
+    return result;
   }
 
 #if 0 // not yet implemented

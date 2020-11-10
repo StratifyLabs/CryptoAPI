@@ -59,5 +59,5 @@ var::String Random::get_string(size_t length) const {
 var::Data Random::get_data(u32 size) const {
   var::Data result(size);
   randomize(result);
-  return std::move(result);
+  return result;
 }
