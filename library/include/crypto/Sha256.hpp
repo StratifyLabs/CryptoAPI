@@ -4,7 +4,7 @@
 #ifndef SAPI_CRYPTO_SHA256_HPP_
 #define SAPI_CRYPTO_SHA256_HPP_
 
-#include <sos/api/crypt_api.h>
+#include <mcu/api.h>
 
 #if defined __link && !defined CRYPT_SHA256_API_REQUEST
 #include <mbedtls_api.h>

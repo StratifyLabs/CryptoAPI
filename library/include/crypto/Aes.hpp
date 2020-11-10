@@ -3,7 +3,7 @@
 #ifndef CRYPTOAPI_CRYPTO_AES_HPP_
 #define CRYPTOAPI_CRYPTO_AES_HPP_
 
-#include <sos/api/crypt_api.h>
+#include <mcu/api.h>
 
 #include <api/api.hpp>
 #include <fs/File.hpp>
