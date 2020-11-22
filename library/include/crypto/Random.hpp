@@ -3,7 +3,7 @@
 #ifndef CRYPTOAPI_CRYTPO_RANDOM_HPP
 #define CRYPTOAPI_CRYTPO_RANDOM_HPP
 
-#include <mcu/api.h>
+#include <sdk/api.h>
 
 #if defined __link && !defined CRYPT_RANDOM_API_REQUEST
 #include <mbedtls_api.h>
