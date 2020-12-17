@@ -18,31 +18,6 @@
 
 namespace crypto {
 
-/*! \brief SHA256 Class
- * \details This class provides
- * access to system hardware or software
- * routines that calculate SHA256
- * hash digest values.
- *
- * The system must implmenent the
- * CRYPT_SHA256_API_REQUEST in kernel_request_api().
- *
- * ```
- * #include <sys/crypt.hpp>
- * #include <sys/var.hpp>
- *
- * Sha256 hash;
- * hash.initialize(); //call once per object
- * hash.start(); //start a new digest
- * Data some_data(128);
- * some_data.fill((u8)0xaa);
- * hash << some_data; //update the digest with some data
- * hash.finalize();
- * printf("Hash is %s\n", hash.stringify());
- * ```
- *
- *
- */
 class Sha256 : public api::ExecutionContext, public var::Transformer {
 public:
   Sha256();
@@ -67,6 +42,9 @@ public:
     return options.input().size();
   }
 
+  static void append_aligned_hash(const fs::FileObject &file_object,
+                                  u8 fill = 0xff);
+  static bool check_aligned_hash(const fs::FileObject &file_object);
 
   static constexpr size_t page_size() {
 #if defined __link

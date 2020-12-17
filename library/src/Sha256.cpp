@@ -46,3 +46,38 @@ void Sha256::finish() const {
         m_output.count()));
   }
 }
+
+void Sha256::append_aligned_hash(const fs::FileObject &file_object, u8 fill) {
+  fs::File::LocationGuard location_guard(file_object);
+  const size_t padding_length = [](size_t image_size) -> size_t {
+    size_t padding_length = sizeof(Hash) - image_size % sizeof(Hash);
+    if (padding_length == sizeof(Hash)) {
+      padding_length = 0;
+    }
+    return padding_length;
+  }(file_object.size());
+
+  var::Array<u8, sizeof(Hash)> padding;
+  padding.fill(fill);
+
+  file_object.seek(0, fs::File::Whence::end)
+      .write(var::View(padding.data(), padding_length));
+
+  Sha256 hash_calculated;
+  fs::NullFile().write(file_object.seek(0),
+                       fs::File::Write().set_transformer(&hash_calculated));
+
+  file_object.write(hash_calculated.output());
+}
+
+bool Sha256::check_aligned_hash(const fs::FileObject &file_object) {
+  fs::File::LocationGuard location_guard(file_object);
+  Sha256 hash_calculated;
+  fs::NullFile().write(file_object.seek(0),
+                       fs::File::Write()
+                           .set_transformer(&hash_calculated)
+                           .set_size(file_object.size() - sizeof(Hash)));
+  Hash hash_read;
+  file_object.read(hash_read);
+  return hash_read == hash_calculated.output();
+}
