@@ -1,5 +1,4 @@
-/*! \file */ // Copyright 2011-2020 Tyler Gilbert and Stratify Labs, Inc; see
-             // LICENSE.md for rights.
+// Copyright 2020-2021 Tyler Gilbert and Stratify Labs, Inc; see LICENSE.md
 
 #ifndef SAPI_CRYPTO_SHA256_HPP_
 #define SAPI_CRYPTO_SHA256_HPP_
@@ -42,7 +41,7 @@ public:
     return options.input().size();
   }
 
-  static void append_aligned_hash(const fs::FileObject &file_object,
+  static Hash append_aligned_hash(const fs::FileObject &file_object,
                                   u8 fill = 0xff);
   static bool check_aligned_hash(const fs::FileObject &file_object);
 

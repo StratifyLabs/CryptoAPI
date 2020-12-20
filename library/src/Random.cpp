@@ -1,5 +1,5 @@
-/*! \file */ // Copyright 2011-2020 Tyler Gilbert and Stratify Labs, Inc; see
-// LICENSE.md for rights.
+// Copyright 2020-2021 Tyler Gilbert and Stratify Labs, Inc; see LICENSE.md
+
 #include "crypto/Random.hpp"
 #include "chrono/ClockTime.hpp"
 #include "chrono/MicroTime.hpp"
@@ -52,11 +52,11 @@ const Random &Random::randomize(var::View destination_data) const {
   return *this;
 }
 
-var::String Random::get_string(size_t length) const {
-  return get_data(length / 2).to_string();
+var::String Random::to_string(size_t length) const {
+  return to_data(length / 2).to_string();
 }
 
-var::Data Random::get_data(u32 size) const {
+var::Data Random::to_data(u32 size) const {
   var::Data result(size);
   randomize(result);
   return result;

@@ -1,5 +1,5 @@
-/*! \file */ // Copyright 2011-2020 Tyler Gilbert and Stratify Labs, Inc; see
-             // LICENSE.md for rights.
+// Copyright 2020-2021 Tyler Gilbert and Stratify Labs, Inc; see LICENSE.md
+
 #include "crypto/Sha256.hpp"
 
 using namespace crypto;
@@ -47,7 +47,8 @@ void Sha256::finish() const {
   }
 }
 
-void Sha256::append_aligned_hash(const fs::FileObject &file_object, u8 fill) {
+Sha256::Hash Sha256::append_aligned_hash(const fs::FileObject &file_object,
+                                         u8 fill) {
   fs::File::LocationGuard location_guard(file_object);
   const size_t padding_length = [](size_t image_size) -> size_t {
     size_t padding_length = sizeof(Hash) - image_size % sizeof(Hash);
@@ -67,7 +68,10 @@ void Sha256::append_aligned_hash(const fs::FileObject &file_object, u8 fill) {
   fs::NullFile().write(file_object.seek(0),
                        fs::File::Write().set_transformer(&hash_calculated));
 
-  file_object.write(hash_calculated.output());
+  const Hash hash_calculated_output = hash_calculated.output();
+  file_object.write(hash_calculated_output);
+
+  return hash_calculated_output;
 }
 
 bool Sha256::check_aligned_hash(const fs::FileObject &file_object) {

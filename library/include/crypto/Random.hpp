@@ -1,5 +1,5 @@
-/*! \file */ // Copyright 2011-2020 Tyler Gilbert and Stratify Labs, Inc; see
-             // LICENSE.md for rights.
+// Copyright 2020-2021 Tyler Gilbert and Stratify Labs, Inc; see LICENSE.md
+
 #ifndef CRYPTOAPI_CRYTPO_RANDOM_HPP
 #define CRYPTOAPI_CRYTPO_RANDOM_HPP
 
@@ -32,8 +32,8 @@ public:
 
   const Random &randomize(const var::View destination_data) const;
 
-  var::String get_string(size_t length) const;
-  var::Data get_data(u32 size) const;
+  var::String to_string(size_t length) const;
+  var::Data to_data(u32 size) const;
 
 private:
   using Api = api::Api<crypt_random_api_t, CRYPT_RANDOM_API_REQUEST>;
