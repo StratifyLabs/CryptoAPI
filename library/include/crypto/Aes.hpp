@@ -45,8 +45,9 @@ public:
       Random().seed().randomize(var::View(m_initialization_vector));
     }
 
-    Key256 key256() const { return m_key; }
-    Key128 key128() const {
+    const Key256& key256() const { return m_key; }
+    Key256 get_key256() const { return m_key; }
+    Key128 get_key128() const {
       Key128 result;
       var::View(result).copy(m_key);
       return result;
