@@ -53,6 +53,16 @@ public:
       return result;
     }
 
+    Key & set_key(const Key128 & key){
+      var::View(m_key).fill(0).copy(var::View(key));
+      return *this;
+    }
+
+    Key & set_key(const Key256 & key){
+      m_key = key;
+      return *this;
+    }
+
     const InitializationVector &initialization_vector() const {
       return m_initialization_vector;
     }
