@@ -52,10 +52,6 @@ const Random &Random::randomize(var::View destination_data) const {
   return *this;
 }
 
-var::String Random::to_string(size_t length) const {
-  return to_data(length / 2).to_string();
-}
-
 var::Data Random::to_data(u32 size) const {
   var::Data result(size);
   randomize(result);

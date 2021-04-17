@@ -45,7 +45,7 @@ public:
       Random().seed().randomize(var::View(m_initialization_vector));
     }
 
-    const Key256& key256() const { return m_key; }
+    const Key256 &key256() const { return m_key; }
     Key256 get_key256() const { return m_key; }
     Key128 get_key128() const {
       Key128 result;
@@ -53,12 +53,12 @@ public:
       return result;
     }
 
-    Key & set_key(const Key128 & key){
+    Key &set_key(const Key128 &key) {
       var::View(m_key).fill(0).copy(var::View(key));
       return *this;
     }
 
-    Key & set_key(const Key256 & key){
+    Key &set_key(const Key256 &key) {
       m_key = key;
       return *this;
     }
@@ -68,15 +68,15 @@ public:
     }
 
     var::GeneralString get_key256_string() const {
-      return var::View(m_key).to_string().string_view();
+      return var::View(m_key).to_string<var::GeneralString>();
     }
 
     var::KeyString get_key128_string() const {
-      return var::StringView(var::View(m_key).to_string().cstring(), 32);
+      return var::View(m_key).to_string<var::KeyString>();
     }
 
     var::KeyString get_initialization_vector_string() const {
-      return var::View(m_initialization_vector).to_string().string_view();
+      return var::View(m_initialization_vector).to_string<var::KeyString>();
     }
 
   private:
@@ -182,7 +182,7 @@ class AesCbcEncrypter : public var::Transformer,
                         public AesAccess<AesCbcEncrypter> {
 public:
   int transform(
-    const var::Transformer::Transform &options) const override final;
+      const var::Transformer::Transform &options) const override final;
 
   size_t page_size_boundary() const override { return 16; }
 };
@@ -191,7 +191,7 @@ class AesCbcDecrypter : public var::Transformer,
                         public AesAccess<AesCbcDecrypter> {
 public:
   int transform(
-    const var::Transformer::Transform &options) const override final;
+      const var::Transformer::Transform &options) const override final;
 
   size_t page_size_boundary() const override { return 16; }
 };

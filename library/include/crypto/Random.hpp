@@ -32,7 +32,12 @@ public:
 
   const Random &randomize(const var::View destination_data) const;
 
-  var::String to_string(size_t length) const;
+  template <class StringType> StringType to_string(size_t length) const {
+    char data[length];
+    var::View data_view(data, length);
+    randomize(data_view);
+    return data_view.to_string<StringType>();
+  }
   var::Data to_data(u32 size) const;
 
 private:

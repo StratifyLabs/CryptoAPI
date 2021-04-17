@@ -41,9 +41,14 @@ public:
     return options.input().size();
   }
 
+  var::KeyString to_string() const {
+    return var::View(m_output).to_string<var::KeyString>();
+  }
+
   static Hash append_aligned_hash(const fs::FileObject &file_object,
                                   u8 fill = 0xff);
   static bool check_aligned_hash(const fs::FileObject &file_object);
+
 
   static constexpr size_t page_size() {
 #if defined __link
