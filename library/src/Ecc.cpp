@@ -4,8 +4,9 @@
 
 namespace printer {
 class Printer;
-Printer &
-operator<<(Printer &printer, const crypto::DigitalSignature::KeyPair &a) {
+Printer &operator<<(
+  Printer &printer,
+  const crypto::DigitalSignatureAlgorithm::KeyPair &a) {
   return printer.key("public ", a.public_key().to_string())
     .key("private", a.private_key().to_string());
 }
@@ -27,12 +28,15 @@ SecretExchange::SecretExchange(Curve curve) {
 
   public_buffer.fill(0);
   u32 public_key_size = public_buffer.count();
+  API_RETURN_IF_ERROR();
 
-  api()->dh_create_key_pair(
-    m_context,
-    static_cast<crypt_ecc_key_pair_t>(curve),
-    public_buffer.data(),
-    &public_key_size);
+  API_SYSTEM_CALL(
+    "failed to create DH key pair",
+    api()->dh_create_key_pair(
+      m_context,
+      static_cast<crypt_ecc_key_pair_t>(curve),
+      public_buffer.data(),
+      &public_key_size));
 
   m_public_key = Key(public_buffer, public_key_size);
 }
@@ -43,18 +47,23 @@ SecretExchange::SharedSecret
 SecretExchange::get_shared_secret(const Key &public_key) const {
   SharedSecret result;
   result.fill(0);
+  API_RETURN_VALUE_IF_ERROR(result);
 
-  api()->dh_calculate_shared_secret(
-    m_context,
-    public_key.data().to_const_u8(),
-    public_key.size(),
-    result.data(),
-    result.count());
+  API_SYSTEM_CALL(
+    "failed to calculate DH shared secret",
+    api()->dh_calculate_shared_secret(
+      m_context,
+      public_key.data().to_const_u8(),
+      public_key.size(),
+      result.data(),
+      result.count()));
 
   return result;
 }
 
-DigitalSignature::KeyPair DigitalSignature::create_key_pair(Curve value) {
+DigitalSignatureAlgorithm::KeyPair
+DigitalSignatureAlgorithm::create_key_pair(Curve value) {
+  API_RETURN_VALUE_IF_ERROR(KeyPair());
 
   Key::Buffer public_key_buffer;
   Key::Buffer private_key_buffer;
@@ -62,48 +71,54 @@ DigitalSignature::KeyPair DigitalSignature::create_key_pair(Curve value) {
   u32 public_key_size = public_key_buffer.count();
   u32 private_key_size = private_key_buffer.count();
 
-  api()->dsa_create_key_pair(
-    m_context,
-    static_cast<crypt_ecc_key_pair_t>(value),
-    public_key_buffer.data(),
-    &public_key_size,
-    private_key_buffer.data(),
-    &private_key_size);
+  API_SYSTEM_CALL(
+    "failed to create DSA key pair",
+    api()->dsa_create_key_pair(
+      m_context,
+      static_cast<crypt_ecc_key_pair_t>(value),
+      public_key_buffer.data(),
+      &public_key_size,
+      private_key_buffer.data(),
+      &private_key_size));
 
   return KeyPair()
     .set_public_key(Key(public_key_buffer, public_key_size))
     .set_private_key(Key(private_key_buffer, private_key_size));
 }
 
-DigitalSignature &DigitalSignature::set_key_pair(const KeyPair &value) {
-
-  api()->dsa_set_key_pair(
-    m_context,
-    value.public_key().data().to_const_u8(),
-    value.public_key().size(),
-    value.private_key().data().to_const_u8(),
-    value.private_key().size());
-
-  return *this;
+void DigitalSignatureAlgorithm::set_key_pair(const KeyPair &value) {
+  API_RETURN_IF_ERROR();
+  m_key_pair = value;
+  API_SYSTEM_CALL(
+    "failed to set DSA key pair",
+    api()->dsa_set_key_pair(
+      m_context,
+      value.public_key().data().to_const_u8(),
+      value.public_key().size(),
+      value.private_key().data().to_const_u8(),
+      value.private_key().size()));
 }
 
-DigitalSignature::Signature
-DigitalSignature::sign(const var::StringView message_hash) {
-
+DigitalSignatureAlgorithm::Signature
+DigitalSignatureAlgorithm::sign(const var::StringView message_hash) {
   Signature result;
   Signature::Buffer buffer;
   u32 size = buffer.count();
-  api()->dsa_sign(
-    m_context,
-    (u8 *)message_hash.data(),
-    message_hash.length(),
-    buffer.data(),
-    &size);
+  API_RETURN_VALUE_IF_ERROR(Signature(buffer, 0));
+
+  API_SYSTEM_CALL(
+    "Failed to sign hash",
+    api()->dsa_sign(
+      m_context,
+      (u8 *)message_hash.data(),
+      message_hash.length(),
+      buffer.data(),
+      &size));
 
   return Signature(buffer, size);
 }
 
-bool DigitalSignature::verify(
+bool DigitalSignatureAlgorithm::verify(
   const Signature &signature,
   const var::StringView message_hash) {
 

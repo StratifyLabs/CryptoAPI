@@ -14,7 +14,9 @@ endif()
 
 project(CryptoAPI CXX)
 
+option(IS_TEST_CRYPTO_API OFF)
+
 add_subdirectory(library library)
-if(SOS_IS_TEST)
+if(SOS_IS_TEST OR IS_TEST_CRYPTO_API)
 	add_subdirectory(tests tests)
 endif()

@@ -45,6 +45,19 @@ public:
       Random().seed().randomize(var::View(m_initialization_vector));
     }
 
+    Key& nullify(){
+      m_key.fill(0);
+      return *this;
+    }
+
+    bool is_null() const {
+      u32 total = 0;
+      for(auto value: m_key){
+        total += value;
+      }
+      return total == 0;
+    }
+
     const Key256 &key256() const { return m_key; }
     Key256 get_key256() const { return m_key; }
     Key128 get_key128() const {
@@ -105,6 +118,13 @@ public:
   static size_t get_padding(size_t input_size) {
     const size_t tmp = input_size % 16;
     return tmp ? (16 - tmp) : 0;
+  }
+
+  static var::Data get_padded_data(const var::View input, u8 padding_value = 0xff) {
+    const auto padding_size = get_padding(input.size());
+    auto result = var::Data(input.size() + padding_size);
+    var::View(result).fill<u8>(padding_value).copy(input);
+    return result;
   }
 
   class Crypt {

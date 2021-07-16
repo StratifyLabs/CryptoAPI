@@ -111,7 +111,7 @@ private:
 
 };
 
-class DigitalSignature : public Ecc {
+class DigitalSignatureAlgorithm : public Ecc {
 public:
   using Signature = Key;
   using SharedSecret = Key;
@@ -147,10 +147,13 @@ public:
     Key m_private_key;
   };
 
-  DigitalSignature() = default;
+  DigitalSignatureAlgorithm(Curve value){
+    m_key_pair = create_key_pair(value);
+  }
 
-  KeyPair create_key_pair(Curve value);
-  DigitalSignature & set_key_pair(const KeyPair & value);
+  DigitalSignatureAlgorithm(const KeyPair & key_pair){
+    set_key_pair(key_pair);
+  }
 
   Signature sign(
     const var::StringView message_hash);
@@ -159,13 +162,24 @@ public:
     const Signature &signature,
     const var::StringView message_hash);
 
+  const KeyPair & key_pair() const {
+    return m_key_pair;
+  }
+
+private:
+  KeyPair create_key_pair(Curve value);
+  void set_key_pair(const KeyPair & value);
+  KeyPair m_key_pair;
+
 };
+
+using Dsa = DigitalSignatureAlgorithm;
 
 } // namespace crypto
 
 namespace printer {
 class Printer;
-Printer &operator<<(Printer &printer, const crypto::DigitalSignature::KeyPair &a);
+Printer &operator<<(Printer &printer, const crypto::DigitalSignatureAlgorithm::KeyPair &a);
 Printer &operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a);
 } // namespace printer
 
