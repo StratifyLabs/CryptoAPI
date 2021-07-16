@@ -41,8 +41,9 @@ public:
     return options.input().size();
   }
 
-  var::KeyString to_string() const {
-    return var::View(m_output).to_string<var::KeyString>();
+  var::GeneralString to_string() const {
+    finish();
+    return var::View(m_output).to_string<var::GeneralString>();
   }
 
   static Hash append_aligned_hash(const fs::FileObject &file_object,
