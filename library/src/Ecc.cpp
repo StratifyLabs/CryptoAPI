@@ -100,7 +100,7 @@ void DigitalSignatureAlgorithm::set_key_pair(const KeyPair &value) {
 }
 
 DigitalSignatureAlgorithm::Signature
-DigitalSignatureAlgorithm::sign(const var::StringView message_hash) {
+DigitalSignatureAlgorithm::sign(const var::View message_hash) {
   Signature result;
   Signature::Buffer buffer;
   u32 size = buffer.count();
@@ -110,8 +110,8 @@ DigitalSignatureAlgorithm::sign(const var::StringView message_hash) {
     "Failed to sign hash",
     api()->dsa_sign(
       m_context,
-      (u8 *)message_hash.data(),
-      message_hash.length(),
+      message_hash.to_const_u8(),
+      message_hash.size(),
       buffer.data(),
       &size));
 
@@ -120,12 +120,12 @@ DigitalSignatureAlgorithm::sign(const var::StringView message_hash) {
 
 bool DigitalSignatureAlgorithm::verify(
   const Signature &signature,
-  const var::StringView message_hash) {
+  const var::View message_hash) {
 
   return api()->dsa_verify(
            m_context,
-           (const u8 *)message_hash.data(),
-           message_hash.length(),
+           message_hash.to_const_u8(),
+           message_hash.size(),
            signature.data().to_const_u8(),
            signature.size())
          != 0;

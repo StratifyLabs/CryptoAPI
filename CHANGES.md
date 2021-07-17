@@ -2,6 +2,9 @@
 
 ## New Features
 
+- Add `Sha256::from_string()` to get a `Hash` from a 64 character string
+- Add config functions for StratifyOS sha256 and uECC to be used as low as the bootloader
+- Add tinycrypt and uECC as subprojects
 - Add `get_padded_data()` to AES which will allocate, pad, and fill a buffer with data to be encrypted
 - Add support for ECC algorigthms (ECDH and ECDSA)
 - Add `is_null()` and `nullify()` to `Aes::Key`

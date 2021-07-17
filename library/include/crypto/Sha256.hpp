@@ -29,6 +29,13 @@ public:
 
   using Hash = var::Array<u8, 32>;
 
+  static Hash from_string(const var::StringView value){
+    API_ASSERT(value.length() == 64);
+    Hash result;
+    var::View(result).from_string(value);
+    return result;
+  }
+
   const Sha256 &update(const var::View &data) const;
   const Hash &output() const {
     finish();

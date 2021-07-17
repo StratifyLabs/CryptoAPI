@@ -16,7 +16,9 @@ project(CryptoAPI CXX)
 
 option(IS_TEST_CRYPTO_API OFF)
 
-add_subdirectory(library library)
+add_subdirectory(library)
+add_subdirectory(tinycrypt)
+add_subdirectory(micro-ecc)
 if(SOS_IS_TEST OR IS_TEST_CRYPTO_API)
-	add_subdirectory(tests tests)
+	add_subdirectory(tests)
 endif()

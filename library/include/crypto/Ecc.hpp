@@ -10,17 +10,17 @@
 #include <var/Data.hpp>
 #include <var/StackString.hpp>
 
-#if defined __link && !defined CRYPT_AES_ECC_REQUEST
-#include <mbedtls_api.h>
-#define CRYPT_AES_ECC_REQUEST &mbedtls_crypt_ecc_api
+#if defined __link && !defined CRYPT_ECC_API_REQUEST
+#include <micro_ecc_api.h>
+#define CRYPT_ECC_API_REQUEST &micro_ecc_api
 #endif
 
 #include "Random.hpp"
 
 namespace crypto {
 
-class Ecc : public api::ExecutionContext{
-  using Api = api::Api<crypt_ecc_api_t, CRYPT_AES_ECC_REQUEST>;
+class Ecc : public api::ExecutionContext {
+  using Api = api::Api<crypt_ecc_api_t, CRYPT_ECC_API_REQUEST>;
   static Api m_api;
 
 public:
@@ -48,9 +48,7 @@ public:
   public:
     using Buffer = var::Array<u8, 256>;
 
-    Key() : m_size(0){
-      m_buffer.fill(0);
-    }
+    Key() : m_size(0) { m_buffer.fill(0); }
 
     Key(const var::StringView value) {
       m_size = value.length() / 2;
@@ -58,23 +56,16 @@ public:
       var::View(m_buffer).from_string(value);
     }
 
-    Key(Buffer buffer, size_t size) : m_buffer(buffer), m_size(size) {
-    }
+    Key(Buffer buffer, size_t size) : m_buffer(buffer), m_size(size) {}
 
-    bool operator ==(const Key & a) const {
-      return data() == a.data();
-    }
+    bool operator==(const Key &a) const { return data() == a.data(); }
 
-    bool operator !=(const Key & a) const {
-      return data() != a.data();
-    }
+    bool operator!=(const Key &a) const { return data() != a.data(); }
 
     var::View data() const { return var::View(m_buffer).truncate(m_size); }
     var::View data() { return var::View(m_buffer).truncate(m_size); }
 
-    auto to_string() const {
-      return data().to_string<var::GeneralString>();
-    }
+    auto to_string() const { return data().to_string<var::GeneralString>(); }
 
   private:
     Buffer m_buffer;
@@ -87,28 +78,20 @@ public:
 protected:
   void *m_context = nullptr;
   static Api &api() { return m_api; }
-
-
 };
-
 
 class SecretExchange : public Ecc {
 public:
-
   using SharedSecret = var::Array<u8, 32>;
   SecretExchange(Curve curve = Curve::secp256r1);
   ~SecretExchange();
 
-  const Key & public_key() const {
-    return m_public_key;
-  }
+  const Key &public_key() const { return m_public_key; }
 
-  SharedSecret get_shared_secret(const Key & public_key) const;
+  SharedSecret get_shared_secret(const Key &public_key) const;
 
 private:
-
   Key m_public_key;
-
 };
 
 class DigitalSignatureAlgorithm : public Ecc {
@@ -147,30 +130,22 @@ public:
     Key m_private_key;
   };
 
-  DigitalSignatureAlgorithm(Curve value){
+  DigitalSignatureAlgorithm(Curve value) {
     m_key_pair = create_key_pair(value);
   }
 
-  DigitalSignatureAlgorithm(const KeyPair & key_pair){
-    set_key_pair(key_pair);
-  }
+  DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
 
-  Signature sign(
-    const var::StringView message_hash);
+  Signature sign(const var::View message_hash);
 
-  bool verify(
-    const Signature &signature,
-    const var::StringView message_hash);
+  bool verify(const Signature &signature, const var::View message_hash);
 
-  const KeyPair & key_pair() const {
-    return m_key_pair;
-  }
+  const KeyPair &key_pair() const { return m_key_pair; }
 
 private:
   KeyPair create_key_pair(Curve value);
-  void set_key_pair(const KeyPair & value);
+  void set_key_pair(const KeyPair &value);
   KeyPair m_key_pair;
-
 };
 
 using Dsa = DigitalSignatureAlgorithm;
@@ -179,8 +154,11 @@ using Dsa = DigitalSignatureAlgorithm;
 
 namespace printer {
 class Printer;
-Printer &operator<<(Printer &printer, const crypto::DigitalSignatureAlgorithm::KeyPair &a);
-Printer &operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a);
+Printer &operator<<(
+  Printer &printer,
+  const crypto::DigitalSignatureAlgorithm::KeyPair &a);
+Printer &
+operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a);
 } // namespace printer
 
 #endif // CRYPTOAPI_CRYPTO_ECC_HPP_
