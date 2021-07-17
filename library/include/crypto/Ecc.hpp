@@ -142,6 +142,10 @@ public:
 
   const KeyPair &key_pair() const { return m_key_pair; }
 
+  static bool is_signed(const fs::File & file);
+  static void append(const fs::File & file, const Signature & signature);
+  static bool verify(const fs::File & file, const Key & public_key);
+
 private:
   KeyPair create_key_pair(Curve value);
   void set_key_pair(const KeyPair &value);

@@ -23,7 +23,6 @@ project(tinycrypt CXX C ASM)
 set(TINYCRYPT_SOURCE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/tinycrypt/lib/source)
 set(TINYCRYPT_INCLUDE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/tinycrypt/lib/include/tinycrypt)
 set(TINYCRYPT_SOURCES
-	${CMAKE_CURRENT_SOURCE_DIR}/tinycrypt_config.c
 	${CMAKE_CURRENT_SOURCE_DIR}/tinycrypt_aes_api.c
 	${CMAKE_CURRENT_SOURCE_DIR}/tinycrypt_sha256_api.c
 	${CMAKE_CURRENT_SOURCE_DIR}/tinycrypt_api.h

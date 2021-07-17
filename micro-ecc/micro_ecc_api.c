@@ -56,9 +56,10 @@ static int ecc_dsa_verify(
   const u8 *signature,
   u32 signature_length);
 
+static u32 ecc_get_context_size();
+
 const crypt_ecc_api_t micro_ecc_api = {
-  .sos_api
-  = {.name = "micro_ecc", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+  .sos_api = {.name = "micro_ecc", .version = 0x0001, .git_hash = SOS_GIT_HASH},
   .init = ecc_init,
   .deinit = ecc_deinit,
   .dh_create_key_pair = ecc_dh_create_key_pair,
@@ -66,7 +67,8 @@ const crypt_ecc_api_t micro_ecc_api = {
   .dsa_create_key_pair = ecc_dsa_create_key_pair,
   .dsa_set_key_pair = ecc_dsa_set_key_pair,
   .dsa_sign = ecc_dsa_sign,
-  .dsa_verify = ecc_dsa_verify};
+  .dsa_verify = ecc_dsa_verify,
+  .get_context_size = ecc_get_context_size};
 
 typedef struct {
   uECC_Curve curve;
@@ -74,15 +76,15 @@ typedef struct {
   u8 private_key[32];
 } ecc_context_t;
 
+u32 ecc_get_context_size(){
+  return sizeof(ecc_context_t);
+}
+
 int ecc_init(void **context) {
   ecc_context_t *c = malloc(sizeof(ecc_context_t));
   if (c == NULL) {
     return -1;
   }
-
-  c->curve = uECC_secp256r1();
-
-  uECC_set_rng(rng_function);
 
   *context = c;
   return 0;
@@ -111,6 +113,7 @@ int ecc_dh_create_key_pair(
   }
 
   c->curve = uECC_secp256r1();
+  uECC_set_rng(rng_function);
 
 
   if (*public_key_capacity < 64) {
@@ -143,6 +146,9 @@ int ecc_dh_calculate_shared_secret(
     return -1;
   }
 
+  c->curve = uECC_secp256r1();
+  uECC_set_rng(rng_function);
+
   uECC_shared_secret(public_key, c->private_key, secret, c->curve);
   return 32;
 }
@@ -162,6 +168,7 @@ static int ecc_dsa_create_key_pair(
   }
 
   c->curve = uECC_secp256r1();
+  uECC_set_rng(rng_function);
 
   if (*public_key_capacity < sizeof(c->public_key)) {
     errno = EINVAL;
@@ -223,6 +230,10 @@ int ecc_dsa_sign(
     errno = EINVAL;
     return -1;
   }
+
+  c->curve = uECC_secp256r1();
+  uECC_set_rng(rng_function);
+
   uECC_sign(c->private_key, message_hash, hash_size, signature, c->curve);
   *signature_length = 64;
   return 0;
@@ -240,6 +251,9 @@ int ecc_dsa_verify(
     errno = EINVAL;
     return -1;
   }
+
+  c->curve = uECC_secp256r1();
+  uECC_set_rng(rng_function);
 
   return uECC_verify(c->public_key, message_hash, hash_size, signature, c->curve);
 }

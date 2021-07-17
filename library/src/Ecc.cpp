@@ -1,6 +1,10 @@
 #include <printer/Printer.hpp>
 
+#include <fs.hpp>
+#include <var.hpp>
+
 #include "crypto/Ecc.hpp"
+#include "crypto/Sha256.hpp"
 
 namespace printer {
 class Printer;
@@ -129,4 +133,71 @@ bool DigitalSignatureAlgorithm::verify(
            signature.data().to_const_u8(),
            signature.size())
          != 0;
+}
+
+bool DigitalSignatureAlgorithm::is_signed(const fs::File &file) {
+  if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
+    return false;
+  }
+
+  File::LocationScope ls(file);
+
+  const size_t marker_location
+    = file.size() - sizeof(crypt_api_signature512_marker_t);
+  crypt_api_signature512_marker_t signature;
+  file.seek(marker_location).read(View(signature).fill(0));
+
+  return (signature.marker.start == CRYPT_SIGNATURE_MARKER_START)
+         && (signature.marker.next == CRYPT_SIGNATURE_MARKER_NEXT)
+         && (signature.marker.size == CRYPT_SIGNATURE_MARKER_SIZE + 512);
+}
+
+void DigitalSignatureAlgorithm::append(
+  const fs::File &file,
+  const Signature &signature) {
+
+  File::LocationScope ls(file);
+
+  crypt_api_signature512_marker_t marker = {
+    .marker = {
+      .start = CRYPT_SIGNATURE_MARKER_START,
+      .next = CRYPT_SIGNATURE_MARKER_NEXT,
+      .size = CRYPT_SIGNATURE_MARKER_SIZE + 512}};
+
+  var::View(marker.signature).copy(signature.data());
+  file.seek(0, File::Whence::end).write(var::View(marker));
+}
+
+bool DigitalSignatureAlgorithm::verify(
+  const fs::File &file,
+  const Key &public_key) {
+  // hash the file up to the marker
+  File::LocationScope ls(file);
+
+  if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
+    return false;
+  }
+  const size_t hash_size
+    = file.size() - sizeof(crypt_api_signature512_marker_t);
+
+  auto hash = [](const fs::File &file, size_t hash_size) {
+    Sha256 result;
+    file.seek(0);
+    fs::NullFile().write(file, result, fs::File::Write().set_size(hash_size));
+    return result.output();
+  }(file, hash_size);
+
+  crypt_api_signature512_marker_t marker;
+  ViewFile(View(marker)).write(file);
+
+  const auto signature_buffer
+    = [](const crypt_api_signature512_marker_t &marker) {
+        Signature::Buffer buffer;
+        View(buffer).copy(View(marker.signature));
+        return buffer;
+      }(marker);
+
+  const Signature signature(signature_buffer, signature_buffer.count());
+
+  return Dsa(KeyPair().set_public_key(public_key)).verify(signature, hash);
 }

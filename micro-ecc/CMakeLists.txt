@@ -23,7 +23,6 @@ project(uECC CXX C ASM)
 set(SOURCE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
 set(INCLUDE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
 set(TINYCRYPT_SOURCES
-	${CMAKE_CURRENT_SOURCE_DIR}/micro_ecc_config.c
 	${CMAKE_CURRENT_SOURCE_DIR}/micro_ecc_api.c
 	${CMAKE_CURRENT_SOURCE_DIR}/micro_ecc_api.h
 	${SOURCE_FOLDER}/uECC.c
@@ -81,9 +80,6 @@ endif()
 
 sos_sdk_library_add_arch_targets("${RELEASE_OPTIONS}" ${SOS_ARCH} "")
 
-install(DIRECTORY
-	${TINYCRYPT_INCLUDE_FOLDER}
-	DESTINATION include/tinycrypt)
 
 install(FILES ${PROJECT_NAME}.cmake
 	DESTINATION ${SOS_SDK_PATH}/cmake/targets)
