@@ -10,66 +10,6 @@
 
 static int rng_function(uint8_t *dest, unsigned int size);
 
-
-static int ecc_init(void **context);
-static void ecc_deinit(void **context);
-
-static int ecc_dh_create_key_pair(
-  void *context,
-  crypt_ecc_key_pair_t type,
-  u8 *public_key,
-  u32 *public_key_capacity);
-
-static int ecc_dh_calculate_shared_secret(
-  void *context,
-  const u8 *public_key,
-  u32 public_key_length,
-  u8 *secret,
-  u32 secret_length);
-
-static int ecc_dsa_create_key_pair(
-  void *context,
-  crypt_ecc_key_pair_t type,
-  u8 *public_key,
-  u32 *public_key_capacity,
-  u8 *private_key,
-  u32 *private_key_capacity);
-
-static int ecc_dsa_set_key_pair(
-  void *context,
-  const u8 *public_key,
-  u32 public_key_capacity,
-  const u8 *private_key,
-  u32 private_key_capacity);
-
-static int ecc_dsa_sign(
-  void *context,
-  const u8 *message_hash,
-  u32 hash_size,
-  u8 *signature,
-  u32 *signature_length);
-
-static int ecc_dsa_verify(
-  void *context,
-  const u8 *message_hash,
-  u32 hash_size,
-  const u8 *signature,
-  u32 signature_length);
-
-static u32 ecc_get_context_size();
-
-const crypt_ecc_api_t micro_ecc_api = {
-  .sos_api = {.name = "micro_ecc", .version = 0x0001, .git_hash = SOS_GIT_HASH},
-  .init = ecc_init,
-  .deinit = ecc_deinit,
-  .dh_create_key_pair = ecc_dh_create_key_pair,
-  .dh_calculate_shared_secret = ecc_dh_calculate_shared_secret,
-  .dsa_create_key_pair = ecc_dsa_create_key_pair,
-  .dsa_set_key_pair = ecc_dsa_set_key_pair,
-  .dsa_sign = ecc_dsa_sign,
-  .dsa_verify = ecc_dsa_verify,
-  .get_context_size = ecc_get_context_size};
-
 typedef struct {
   uECC_Curve curve;
   u8 public_key[64];
@@ -80,7 +20,24 @@ u32 ecc_get_context_size(){
   return sizeof(ecc_context_t);
 }
 
-int ecc_init(void **context) {
+#if defined __StratifyOS__
+static int ecc_root_init(void **context) {
+  ecc_context_t *c = *context;
+  *c = (ecc_context_t){};
+  c->curve = uECC_secp256r1();
+  return 0;
+}
+
+static void ecc_root_deinit(void **context) {
+  ecc_context_t *c = *context;
+  if (c) {
+    *c = (ecc_context_t){};
+    *context = 0;
+  }
+}
+#endif
+
+static int ecc_init(void **context) {
   ecc_context_t *c = malloc(sizeof(ecc_context_t));
   if (c == NULL) {
     return -1;
@@ -90,7 +47,7 @@ int ecc_init(void **context) {
   return 0;
 }
 
-void ecc_deinit(void **context) {
+static void ecc_deinit(void **context) {
   ecc_context_t *c = *context;
 
   if (c) {
@@ -100,7 +57,7 @@ void ecc_deinit(void **context) {
   }
 }
 
-int ecc_dh_create_key_pair(
+static int ecc_dh_create_key_pair(
   void *context,
   crypt_ecc_key_pair_t type,
   u8 *public_key,
@@ -128,7 +85,7 @@ int ecc_dh_create_key_pair(
   return 0;
 }
 
-int ecc_dh_calculate_shared_secret(
+static int ecc_dh_calculate_shared_secret(
   void *context,
   const u8 *public_key,
   u32 public_key_length,
@@ -218,7 +175,7 @@ static int ecc_dsa_set_key_pair(
   return 0;
 }
 
-int ecc_dsa_sign(
+static int ecc_dsa_sign(
   void *context,
   const u8 *message_hash,
   u32 hash_size,
@@ -239,7 +196,7 @@ int ecc_dsa_sign(
   return 0;
 }
 
-int ecc_dsa_verify(
+static int ecc_dsa_verify(
   void *context,
   const u8 *message_hash,
   u32 hash_size,
@@ -266,3 +223,29 @@ int rng_function(uint8_t *dest, unsigned int size){
 #endif
   return size;
 }
+
+const crypt_ecc_api_t micro_ecc_api = {
+    .sos_api = {.name = "micro_ecc", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    .init = ecc_init,
+    .deinit = ecc_deinit,
+    .dh_create_key_pair = ecc_dh_create_key_pair,
+    .dh_calculate_shared_secret = ecc_dh_calculate_shared_secret,
+    .dsa_create_key_pair = ecc_dsa_create_key_pair,
+    .dsa_set_key_pair = ecc_dsa_set_key_pair,
+    .dsa_sign = ecc_dsa_sign,
+    .dsa_verify = ecc_dsa_verify,
+    .get_context_size = ecc_get_context_size};
+
+#if defined __StratifyOS__
+const crypt_ecc_api_t micro_ecc_root_api = {
+    .sos_api = {.name = "micro_ecc_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    .init = ecc_root_init,
+    .deinit = ecc_root_deinit,
+    .dh_create_key_pair = ecc_dh_create_key_pair,
+    .dh_calculate_shared_secret = ecc_dh_calculate_shared_secret,
+    .dsa_create_key_pair = ecc_dsa_create_key_pair,
+    .dsa_set_key_pair = ecc_dsa_set_key_pair,
+    .dsa_sign = ecc_dsa_sign,
+    .dsa_verify = ecc_dsa_verify,
+    .get_context_size = ecc_get_context_size};
+#endif

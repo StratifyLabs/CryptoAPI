@@ -15,6 +15,27 @@ static u32 sha256_get_context_size(){
   return sizeof(sha256_context_t);
 }
 
+#if __StratifyOS__
+static int sha256_root_init(void **context) {
+  TCSha256State_t c
+      = *context;
+  if (c == 0) {
+    return -1;
+  }
+  *c = (struct tc_sha256_state_struct){};
+  *context = c;
+  return 0;
+}
+
+static void sha256_root_deinit(void **context) {
+  TCSha256State_t c = *context;
+  if (c) {
+    *c = (struct tc_sha256_state_struct){};
+    *context = 0;
+  }
+}
+#endif
+
 static int sha256_init(void **context) {
   TCSha256State_t c
     = malloc(sizeof(struct tc_sha256_state_struct));
@@ -62,6 +83,17 @@ const crypt_hash_api_t tinycrypt_sha256_api = {
   .finish = sha256_finish,
   .get_context_size = sha256_get_context_size };
 
+#if __StratifyOS__
+const crypt_hash_api_t tinycrypt_sha256_root_api = {
+    .sos_api
+    = {.name = "tinycrypt_sha256_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    .init = sha256_root_init,
+    .deinit = sha256_root_deinit,
+    .start = sha256_start,
+    .update = sha256_update,
+    .finish = sha256_finish,
+    .get_context_size = sha256_get_context_size };
+#endif
 
 
 

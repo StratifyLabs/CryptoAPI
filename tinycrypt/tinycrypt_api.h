@@ -23,6 +23,10 @@ void tinycrypt_config_sha256_finish(void *context, u8 output[32]);
 
 extern const crypt_hash_api_t tinycrypt_sha256_api;
 extern const crypt_aes_api_t tinycrypt_aes_api;
+#if defined __StratifyOS__
+extern const crypt_hash_api_t tinycrypt_sha256_root_api;
+extern const crypt_aes_api_t tinycrypt_aes_root_api;
+#endif
 
 #if defined __cplusplus
 }

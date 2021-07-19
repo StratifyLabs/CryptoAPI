@@ -14,11 +14,28 @@ typedef struct {
   u32 key_bits;
 } aes_context_t;
 
+#if __StratifyOS__
+static int aes_root_init(void **context) {
+  aes_context_t *c = *context;
+  *c = (aes_context_t){};
+  return 0;
+}
+
+static void aes_root_deinit(void **context) {
+  aes_context_t *c = *context;
+  if (c) {
+    *c = (aes_context_t){};
+    *context = 0;
+  }
+}
+#endif
+
 static int aes_init(void **context) {
   aes_context_t *c = malloc(sizeof(aes_context_t));
   if (c == NULL) {
     return -1;
   }
+  *c = (aes_context_t){};
   *context = c;
   return 0;
 }
@@ -26,7 +43,6 @@ static int aes_init(void **context) {
 static void aes_deinit(void **context) {
   aes_context_t *c = *context;
   if (c) {
-
     free(c);
     *context = 0;
   }
@@ -125,3 +141,20 @@ const crypt_aes_api_t tinycrypt_aes_api = {
   .decrypt_cbc = aes_decrypt_cbc,
   .encrypt_ctr = aes_encrypt_ctr,
   .decrypt_ctr = aes_decrypt_ctr};
+
+#if __StratifyOS__
+const crypt_aes_api_t tinycrypt_aes_root_api = {
+    .sos_api
+    = {.name = "tinycrypt_aes_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    .init = aes_root_init,
+    .deinit = aes_root_deinit,
+    .set_key = aes_set_key,
+    .encrypt_ecb = NULL,
+    .decrypt_ecb = NULL,
+    .encrypt_cbc = aes_encrypt_cbc,
+    .decrypt_cbc = aes_decrypt_cbc,
+    .encrypt_ctr = aes_encrypt_ctr,
+    .decrypt_ctr = aes_decrypt_ctr};
+#endif
+
+
