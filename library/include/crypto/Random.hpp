@@ -25,6 +25,15 @@ public:
   Random &seed();
   Random &seed(const var::View source_data);
 
+  Random(Random &&a){
+    std::swap(m_context, a.m_context);
+  }
+
+  Random &operator=(Random &&a){
+    std::swap(m_context, a.m_context);
+    return *this;
+  }
+
   int transform(const Transform &options) const override {
     randomize(options.output());
     return options.output().size();

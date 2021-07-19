@@ -100,11 +100,17 @@ public:
   Aes();
   ~Aes();
 
-  Aes(const Aes &aes) = delete;
+  Aes(const Aes &a) = delete;
   Aes &operator=(const Aes &aes) = delete;
 
-  Aes(Aes &&aes) = default;
-  Aes &operator=(Aes &&aes) = default;
+  Aes(Aes &&a){
+    std::swap(m_context, a.m_context);
+  }
+
+  Aes &operator=(Aes &&a){
+    std::swap(m_context, a.m_context);
+    return *this;
+  }
 
   Aes &set_key128(const var::View &key);
   Aes &set_key256(const var::View &key);

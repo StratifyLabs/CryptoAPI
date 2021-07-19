@@ -24,8 +24,15 @@ public:
 
   Sha256(const Sha256 &) = delete;
   Sha256 &operator=(const Sha256 &) = delete;
-  Sha256(Sha256 &&) = default;
-  Sha256 &operator=(Sha256 &&) = default;
+
+  Sha256(Sha256 &&a){
+    std::swap(m_context, a.m_context);
+  }
+
+  Sha256 &operator=(Sha256 &&a){
+    std::swap(m_context, a.m_context);
+    return *this;
+  }
 
   using Hash = var::Array<u8, 32>;
 
@@ -53,8 +60,15 @@ public:
     return var::View(m_output).to_string<var::GeneralString>();
   }
 
+  static Hash get_hash(const fs::FileObject & file){
+    Sha256 hash;
+    fs::NullFile().write(file, hash);
+    return hash.output();
+  }
+
   static Hash append_aligned_hash(const fs::FileObject &file_object,
                                   u8 fill = 0xff);
+
   static bool check_aligned_hash(const fs::FileObject &file_object);
 
 
