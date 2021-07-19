@@ -57,6 +57,15 @@ public:
     }
 
     Key(Buffer buffer, size_t size) : m_buffer(buffer), m_size(size) {}
+    Key(var::View value){
+      API_ASSERT(value.size() < sizeof(Buffer));
+      var::View(m_buffer).copy(value);
+      m_size = value.size();
+    }
+
+    bool is_valid() const {
+      return m_size != 0;
+    }
 
     bool operator==(const Key &a) const { return data() == a.data(); }
 
@@ -74,6 +83,18 @@ public:
 
   Ecc();
   ~Ecc();
+
+  Ecc(const Ecc &a) = delete;
+  Ecc &operator=(const Ecc &a) = delete;
+
+  Ecc(Ecc &&a){
+    std::swap(m_context, a.m_context);
+  }
+
+  Ecc &operator=(Ecc &&a){
+    std::swap(m_context, a.m_context);
+    return *this;
+  }
 
 protected:
   void *m_context = nullptr;
@@ -134,17 +155,20 @@ public:
     m_key_pair = create_key_pair(value);
   }
 
+
+
   DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
 
-  Signature sign(const var::View message_hash);
+  Signature sign(const var::View message_hash) const;
+  Signature sign(const fs::FileObject & file) const;
 
   bool verify(const Signature &signature, const var::View message_hash);
 
   const KeyPair &key_pair() const { return m_key_pair; }
 
-  static bool is_signed(const fs::File & file);
-  static void append(const fs::File & file, const Signature & signature);
-  static bool verify(const fs::File & file, const Key & public_key);
+  static Signature get_signature(const fs::FileObject & file);
+  static void append(const fs::FileObject & file, const Signature & signature);
+  static bool verify(const fs::FileObject & file, const Key & public_key);
 
 private:
   KeyPair create_key_pair(Curve value);

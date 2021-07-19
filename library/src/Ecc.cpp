@@ -104,7 +104,7 @@ void DigitalSignatureAlgorithm::set_key_pair(const KeyPair &value) {
 }
 
 DigitalSignatureAlgorithm::Signature
-DigitalSignatureAlgorithm::sign(const var::View message_hash) {
+DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
   Signature result;
   Signature::Buffer buffer;
   u32 size = buffer.count();
@@ -122,6 +122,14 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) {
   return Signature(buffer, size);
 }
 
+Dsa::Signature DigitalSignatureAlgorithm::sign(const fs::FileObject & file) const {
+  File::LocationScope ls(file);
+  const auto hash = Sha256::get_hash(file.seek(0));
+  const auto signature = sign(hash);
+  append(file, signature);
+  return signature;
+}
+
 bool DigitalSignatureAlgorithm::verify(
   const Signature &signature,
   const var::View message_hash) {
@@ -135,9 +143,9 @@ bool DigitalSignatureAlgorithm::verify(
          != 0;
 }
 
-bool DigitalSignatureAlgorithm::is_signed(const fs::File &file) {
+Dsa::Signature DigitalSignatureAlgorithm::get_signature(const fs::FileObject &file) {
   if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
-    return false;
+    return Signature();
   }
 
   File::LocationScope ls(file);
@@ -147,13 +155,17 @@ bool DigitalSignatureAlgorithm::is_signed(const fs::File &file) {
   crypt_api_signature512_marker_t signature;
   file.seek(marker_location).read(View(signature).fill(0));
 
-  return (signature.marker.start == CRYPT_SIGNATURE_MARKER_START)
-         && (signature.marker.next == CRYPT_SIGNATURE_MARKER_NEXT)
-         && (signature.marker.size == CRYPT_SIGNATURE_MARKER_SIZE + 512);
+  if((signature.marker.start == CRYPT_SIGNATURE_MARKER_START)
+      && (signature.marker.next == CRYPT_SIGNATURE_MARKER_NEXT)
+      && (signature.marker.size == CRYPT_SIGNATURE_MARKER_SIZE + 512)){
+    return Signature(View(signature.signature));
+  } else {
+    return Signature();
+  }
 }
 
 void DigitalSignatureAlgorithm::append(
-  const fs::File &file,
+  const fs::FileObject &file,
   const Signature &signature) {
 
   File::LocationScope ls(file);
@@ -169,7 +181,7 @@ void DigitalSignatureAlgorithm::append(
 }
 
 bool DigitalSignatureAlgorithm::verify(
-  const fs::File &file,
+  const fs::FileObject &file,
   const Key &public_key) {
   // hash the file up to the marker
   File::LocationScope ls(file);
@@ -180,7 +192,7 @@ bool DigitalSignatureAlgorithm::verify(
   const size_t hash_size
     = file.size() - sizeof(crypt_api_signature512_marker_t);
 
-  auto hash = [](const fs::File &file, size_t hash_size) {
+  auto hash = [](const fs::FileObject &file, size_t hash_size) {
     Sha256 result;
     file.seek(0);
     fs::NullFile().write(file, result, fs::File::Write().set_size(hash_size));
