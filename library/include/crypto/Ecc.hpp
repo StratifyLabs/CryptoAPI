@@ -16,6 +16,7 @@
 #endif
 
 #include "Random.hpp"
+#include "Sha256.hpp"
 
 namespace crypto {
 
@@ -166,6 +167,12 @@ public:
 
   const KeyPair &key_pair() const { return m_key_pair; }
 
+  class SignatureInfo {
+    API_AC(SignatureInfo, Signature, signature);
+    API_AC(SignatureInfo, Sha256::Hash, hash);
+  };
+
+  static SignatureInfo get_signature_info(const fs::FileObject & file);
   static Signature get_signature(const fs::FileObject & file);
   static void append(const fs::FileObject & file, const Signature & signature);
   static bool verify(const fs::FileObject & file, const Key & public_key);

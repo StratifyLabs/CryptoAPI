@@ -122,7 +122,8 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
   return Signature(buffer, size);
 }
 
-Dsa::Signature DigitalSignatureAlgorithm::sign(const fs::FileObject & file) const {
+Dsa::Signature
+DigitalSignatureAlgorithm::sign(const fs::FileObject &file) const {
   File::LocationScope ls(file);
   const auto hash = Sha256::get_hash(file.seek(0));
   const auto signature = sign(hash);
@@ -143,7 +144,29 @@ bool DigitalSignatureAlgorithm::verify(
          != 0;
 }
 
-Dsa::Signature DigitalSignatureAlgorithm::get_signature(const fs::FileObject &file) {
+Dsa::SignatureInfo
+DigitalSignatureAlgorithm::get_signature_info(const fs::FileObject &file) {
+
+  File::LocationScope ls(file);
+
+  if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
+    return SignatureInfo();
+  }
+  const size_t hash_size
+    = file.size() - sizeof(crypt_api_signature512_marker_t);
+
+  auto hash = [](const fs::FileObject &file, size_t hash_size) {
+    Sha256 result;
+    file.seek(0);
+    fs::NullFile().write(file, result, fs::File::Write().set_size(hash_size));
+    return result.output();
+  }(file, hash_size);
+
+  return SignatureInfo().set_hash(hash).set_signature(get_signature(file));
+}
+
+Dsa::Signature
+DigitalSignatureAlgorithm::get_signature(const fs::FileObject &file) {
   if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
     return Signature();
   }
@@ -155,9 +178,10 @@ Dsa::Signature DigitalSignatureAlgorithm::get_signature(const fs::FileObject &fi
   crypt_api_signature512_marker_t signature;
   file.seek(marker_location).read(View(signature).fill(0));
 
-  if((signature.marker.start == CRYPT_SIGNATURE_MARKER_START)
-      && (signature.marker.next == CRYPT_SIGNATURE_MARKER_NEXT)
-      && (signature.marker.size == CRYPT_SIGNATURE_MARKER_SIZE + 512)){
+  if (
+    (signature.marker.start == CRYPT_SIGNATURE_MARKER_START)
+    && (signature.marker.next == CRYPT_SIGNATURE_MARKER_NEXT)
+    && (signature.marker.size == CRYPT_SIGNATURE_MARKER_SIZE + 512)) {
     return Signature(View(signature.signature));
   } else {
     return Signature();
@@ -189,27 +213,9 @@ bool DigitalSignatureAlgorithm::verify(
   if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
     return false;
   }
-  const size_t hash_size
-    = file.size() - sizeof(crypt_api_signature512_marker_t);
 
-  auto hash = [](const fs::FileObject &file, size_t hash_size) {
-    Sha256 result;
-    file.seek(0);
-    fs::NullFile().write(file, result, fs::File::Write().set_size(hash_size));
-    return result.output();
-  }(file, hash_size);
+  const auto signature_info = get_signature_info(file);
 
-  crypt_api_signature512_marker_t marker;
-  ViewFile(View(marker)).write(file);
-
-  const auto signature_buffer
-    = [](const crypt_api_signature512_marker_t &marker) {
-        Signature::Buffer buffer;
-        View(buffer).copy(View(marker.signature));
-        return buffer;
-      }(marker);
-
-  const Signature signature(signature_buffer, signature_buffer.count());
-
-  return Dsa(KeyPair().set_public_key(public_key)).verify(signature, hash);
+  return Dsa(KeyPair().set_public_key(public_key))
+    .verify(signature_info.signature(), signature_info.hash());
 }
