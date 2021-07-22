@@ -22,7 +22,7 @@ project(uECC CXX C ASM)
 
 set(SOURCE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
 set(INCLUDE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
-set(TINYCRYPT_SOURCES
+set(UECC_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/micro_ecc_api.c
 	${CMAKE_CURRENT_SOURCE_DIR}/micro_ecc_api.h
 	${SOURCE_FOLDER}/uECC.c
@@ -42,7 +42,7 @@ add_library(${RELEASE_TARGET} STATIC)
 
 target_sources(${RELEASE_TARGET}
 	PRIVATE
-	${TINYCRYPT_SOURCES}
+	${UECC_SOURCES}
 	)
 
 target_compile_definitions(${RELEASE_TARGET}

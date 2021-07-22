@@ -14,6 +14,7 @@ extern const crypt_ecc_api_t micro_ecc_api;
 
 #if defined __StratifyOS__
 extern const crypt_ecc_api_t micro_ecc_root_api;
+extern const crypt_ecc_api_t micro_ecc_verify_root_api;
 #endif
 
 #if defined __cplusplus
