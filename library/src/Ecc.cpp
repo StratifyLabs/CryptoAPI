@@ -125,6 +125,7 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
 Dsa::Signature
 DigitalSignatureAlgorithm::sign(const fs::FileObject &file) const {
   File::LocationScope ls(file);
+
   const auto hash = Sha256::get_hash(file.seek(0));
   const auto signature = sign(hash);
   append(file, signature);
@@ -141,7 +142,7 @@ bool DigitalSignatureAlgorithm::verify(
            message_hash.size(),
            signature.data().to_const_u8(),
            signature.size())
-         != 0;
+         == 1;
 }
 
 Dsa::SignatureInfo
@@ -157,6 +158,7 @@ DigitalSignatureAlgorithm::get_signature_info(const fs::FileObject &file) {
 
   auto hash = [](const fs::FileObject &file, size_t hash_size) {
     Sha256 result;
+    File::LocationScope ls(file);
     file.seek(0);
     fs::NullFile().write(file, result, fs::File::Write().set_size(hash_size));
     return result.output();
