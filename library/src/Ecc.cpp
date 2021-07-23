@@ -19,6 +19,12 @@ Printer &
 operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a) {
   return printer.key("content", var::View(a).to_string<var::GeneralString>());
 }
+
+Printer &operator<<(Printer &printer, const crypto::Dsa::SignatureInfo &a) {
+  return printer
+    .key("hash", var::View(a.hash()).to_string<var::GeneralString>())
+    .key("signature", a.signature().to_string());
+}
 } // namespace printer
 
 using namespace crypto;
