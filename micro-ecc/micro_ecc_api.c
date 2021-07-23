@@ -248,4 +248,16 @@ const crypt_ecc_api_t micro_ecc_root_api = {
     .dsa_sign = ecc_dsa_sign,
     .dsa_verify = ecc_dsa_verify,
     .get_context_size = ecc_get_context_size};
+
+const crypt_ecc_api_t micro_ecc_verify_root_api = {
+    .sos_api = {.name = "micro_ecc_verify_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    .init = ecc_root_init,
+    .deinit = ecc_root_deinit,
+    .dh_create_key_pair = NULL,
+    .dh_calculate_shared_secret = NULL,
+    .dsa_create_key_pair = NULL,
+    .dsa_set_key_pair = ecc_dsa_set_key_pair,
+    .dsa_sign = NULL,
+    .dsa_verify = ecc_dsa_verify,
+    .get_context_size = ecc_get_context_size};
 #endif
