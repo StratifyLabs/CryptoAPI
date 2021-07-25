@@ -206,6 +206,8 @@ Printer &operator<<(
   const crypto::DigitalSignatureAlgorithm::KeyPair &a);
 Printer &
 operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a);
+Printer &
+operator<<(Printer &printer, const crypto::Dsa::SignatureInfo &a);
 } // namespace printer
 
 #endif // CRYPTOAPI_CRYPTO_ECC_HPP_
