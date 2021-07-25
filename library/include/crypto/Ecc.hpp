@@ -24,6 +24,14 @@ class Ecc : public api::ExecutionContext {
   using Api = api::Api<crypt_ecc_api_t, CRYPT_ECC_API_REQUEST>;
   static Api m_api;
 
+protected:
+  enum class KeyObjectType {
+    public_key,
+    private_key,
+    signature,
+    shared_secret
+  };
+
 public:
   enum class Curve {
     secp192r1 = CRYPT_ECC_KEY_PAIR_SECP192R1,
@@ -45,42 +53,47 @@ public:
     curve448 = CRYPT_ECC_KEY_PAIR_CURVE448
   };
 
-  class Key {
+
+  template<unsigned KeySize, KeyObjectType Type> class KeyObject {
   public:
-    using Buffer = var::Array<u8, 256>;
+    using Buffer = var::Array<u8, KeySize>;
 
-    Key() : m_size(0) { m_buffer.fill(0); }
+    KeyObject() { m_buffer.fill(0); }
 
-    Key(const var::StringView value) {
-      m_size = value.length() / 2;
-      API_ASSERT(m_size <= sizeof(Buffer));
+    KeyObject(const var::StringView value) {
+      API_ASSERT(value.length()/2 != sizeof(Buffer));
       var::View(m_buffer).from_string(value);
     }
 
-    Key(Buffer buffer, size_t size) : m_buffer(buffer), m_size(size) {}
-    Key(var::View value){
-      API_ASSERT(value.size() < sizeof(Buffer));
+    KeyObject(Buffer buffer) : m_buffer(buffer){}
+    KeyObject(var::View value){
+      API_ASSERT(value.size() != KeySize);
       var::View(m_buffer).copy(value);
-      m_size = value.size();
+    }
+
+    size_t size() const {
+      return KeySize;
     }
 
     bool is_valid() const {
-      return m_size != 0;
+      return true;
     }
 
-    bool operator==(const Key &a) const { return data() == a.data(); }
+    bool operator==(const KeyObject &a) const { return data() == a.data(); }
 
-    bool operator!=(const Key &a) const { return data() != a.data(); }
+    bool operator!=(const KeyObject &a) const { return data() != a.data(); }
 
-    var::View data() const { return var::View(m_buffer).truncate(m_size); }
-    var::View data() { return var::View(m_buffer).truncate(m_size); }
+    var::View data() const { return m_buffer; }
+    var::View data() { return m_buffer; }
 
-    auto to_string() const { return data().to_string<var::GeneralString>(); }
+    auto to_string() const { return var::View(m_buffer).to_string<var::GeneralString>(); }
 
   private:
     Buffer m_buffer;
-    API_AF(Key, size_t, size, 0);
   };
+
+  using PublicKey = KeyObject<64, KeyObjectType::public_key>;
+  using PrivateKey = KeyObject<32, KeyObjectType::private_key>;
 
   Ecc();
   ~Ecc();
@@ -108,18 +121,18 @@ public:
   SecretExchange(Curve curve = Curve::secp256r1);
   ~SecretExchange();
 
-  const Key &public_key() const { return m_public_key; }
+  const PublicKey &public_key() const { return m_public_key; }
 
-  SharedSecret get_shared_secret(const Key &public_key) const;
+  SharedSecret get_shared_secret(const PublicKey &public_key) const;
 
 private:
-  Key m_public_key;
+  PublicKey m_public_key;
 };
 
 class DigitalSignatureAlgorithm : public Ecc {
 public:
-  using Signature = Key;
-  using SharedSecret = Key;
+  using Signature = KeyObject<64, KeyObjectType::signature>;
+  using SharedSecret = KeyObject<32, KeyObjectType::shared_secret>;
 
   class KeyPair {
   public:
@@ -134,28 +147,27 @@ public:
 
     KeyPair() = default;
 
-    KeyPair &set_public_key(const Key &value) {
+    KeyPair &set_public_key(const PublicKey &value) {
       m_public_key = value;
       return *this;
     }
 
-    KeyPair &set_private_key(const Key &value) {
+    KeyPair &set_private_key(const PrivateKey &value) {
       m_private_key = value;
       return *this;
     }
 
-    const Key &public_key() const { return m_public_key; }
-    const Key &private_key() const { return m_private_key; }
+    const PublicKey &public_key() const { return m_public_key; }
+    const PrivateKey &private_key() const { return m_private_key; }
 
   private:
-    Key m_public_key;
-    Key m_private_key;
+    PublicKey m_public_key;
+    PrivateKey m_private_key;
   };
 
   DigitalSignatureAlgorithm(Curve value) {
     m_key_pair = create_key_pair(value);
   }
-
 
 
   DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
@@ -175,7 +187,7 @@ public:
   static SignatureInfo get_signature_info(const fs::FileObject & file);
   static Signature get_signature(const fs::FileObject & file);
   static void append(const fs::FileObject & file, const Signature & signature);
-  static bool verify(const fs::FileObject & file, const Key & public_key);
+  static bool verify(const fs::FileObject & file, const PublicKey & public_key);
 
 private:
   KeyPair create_key_pair(Curve value);

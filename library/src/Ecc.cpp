@@ -28,7 +28,7 @@ Ecc::Ecc() { api()->init(&m_context); }
 Ecc::~Ecc() { api()->deinit(&m_context); }
 
 SecretExchange::SecretExchange(Curve curve) {
-  Key::Buffer public_buffer;
+  PublicKey::Buffer public_buffer;
 
   public_buffer.fill(0);
   u32 public_key_size = public_buffer.count();
@@ -42,13 +42,13 @@ SecretExchange::SecretExchange(Curve curve) {
       public_buffer.data(),
       &public_key_size));
 
-  m_public_key = Key(public_buffer, public_key_size);
+  m_public_key = PublicKey(public_buffer);
 }
 
 SecretExchange::~SecretExchange() {}
 
 SecretExchange::SharedSecret
-SecretExchange::get_shared_secret(const Key &public_key) const {
+SecretExchange::get_shared_secret(const PublicKey &public_key) const {
   SharedSecret result;
   result.fill(0);
   API_RETURN_VALUE_IF_ERROR(result);
@@ -69,8 +69,8 @@ DigitalSignatureAlgorithm::KeyPair
 DigitalSignatureAlgorithm::create_key_pair(Curve value) {
   API_RETURN_VALUE_IF_ERROR(KeyPair());
 
-  Key::Buffer public_key_buffer;
-  Key::Buffer private_key_buffer;
+  PublicKey::Buffer public_key_buffer;
+  PrivateKey::Buffer private_key_buffer;
 
   u32 public_key_size = public_key_buffer.count();
   u32 private_key_size = private_key_buffer.count();
@@ -85,9 +85,12 @@ DigitalSignatureAlgorithm::create_key_pair(Curve value) {
       private_key_buffer.data(),
       &private_key_size));
 
+  API_ASSERT(public_key_size == public_key_buffer.count());
+  API_ASSERT(private_key_size == private_key_buffer.count());
+
   return KeyPair()
-    .set_public_key(Key(public_key_buffer, public_key_size))
-    .set_private_key(Key(private_key_buffer, private_key_size));
+    .set_public_key(PublicKey(public_key_buffer))
+    .set_private_key(PrivateKey(private_key_buffer));
 }
 
 void DigitalSignatureAlgorithm::set_key_pair(const KeyPair &value) {
@@ -108,7 +111,7 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
   Signature result;
   Signature::Buffer buffer;
   u32 size = buffer.count();
-  API_RETURN_VALUE_IF_ERROR(Signature(buffer, 0));
+  API_RETURN_VALUE_IF_ERROR(Signature());
 
   API_SYSTEM_CALL(
     "Failed to sign hash",
@@ -119,7 +122,9 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
       buffer.data(),
       &size));
 
-  return Signature(buffer, size);
+  API_ASSERT(size == buffer.count());
+
+  return Signature(buffer);
 }
 
 Dsa::Signature
@@ -150,11 +155,11 @@ DigitalSignatureAlgorithm::get_signature_info(const fs::FileObject &file) {
 
   File::LocationScope ls(file);
 
-  if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
+  if (file.size() < sizeof(crypt_api_signature_marker_t)) {
     return SignatureInfo();
   }
   const size_t hash_size
-    = file.size() - sizeof(crypt_api_signature512_marker_t);
+    = file.size() - sizeof(crypt_api_signature_marker_t);
 
   auto hash = [](const fs::FileObject &file, size_t hash_size) {
     Sha256 result;
@@ -169,22 +174,22 @@ DigitalSignatureAlgorithm::get_signature_info(const fs::FileObject &file) {
 
 Dsa::Signature
 DigitalSignatureAlgorithm::get_signature(const fs::FileObject &file) {
-  if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
+  if (file.size() < sizeof(crypt_api_signature_marker_t)) {
     return Signature();
   }
 
   File::LocationScope ls(file);
 
   const size_t marker_location
-    = file.size() - sizeof(crypt_api_signature512_marker_t);
-  crypt_api_signature512_marker_t signature;
+    = file.size() - sizeof(crypt_api_signature_marker_t);
+  crypt_api_signature_marker_t signature;
   file.seek(marker_location).read(View(signature).fill(0));
 
   if (
-    (signature.marker.start == CRYPT_SIGNATURE_MARKER_START)
-    && (signature.marker.next == CRYPT_SIGNATURE_MARKER_NEXT)
-    && (signature.marker.size == CRYPT_SIGNATURE_MARKER_SIZE + 512)) {
-    return Signature(View(signature.signature));
+    (signature.start == CRYPT_SIGNATURE_MARKER_START)
+    && (signature.next == CRYPT_SIGNATURE_MARKER_NEXT)
+    && (signature.size == CRYPT_SIGNATURE_MARKER_SIZE + 512)) {
+    return Signature(View(signature.data));
   } else {
     return Signature();
   }
@@ -196,23 +201,22 @@ void DigitalSignatureAlgorithm::append(
 
   File::LocationScope ls(file);
 
-  crypt_api_signature512_marker_t marker = {
-    .marker = {
+  crypt_api_signature_marker_t marker = {
       .start = CRYPT_SIGNATURE_MARKER_START,
       .next = CRYPT_SIGNATURE_MARKER_NEXT,
-      .size = CRYPT_SIGNATURE_MARKER_SIZE + 512}};
+      .size = CRYPT_SIGNATURE_MARKER_SIZE + 512};
 
-  var::View(marker.signature).copy(signature.data());
+  var::View(marker.data).copy(signature.data());
   file.seek(0, File::Whence::end).write(var::View(marker));
 }
 
 bool DigitalSignatureAlgorithm::verify(
   const fs::FileObject &file,
-  const Key &public_key) {
+  const PublicKey &public_key) {
   // hash the file up to the marker
   File::LocationScope ls(file);
 
-  if (file.size() < sizeof(crypt_api_signature512_marker_t)) {
+  if (file.size() < sizeof(crypt_api_signature_marker_t)) {
     return false;
   }
 
