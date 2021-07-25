@@ -2,7 +2,6 @@
 
 #include <fs.hpp>
 #include <var.hpp>
-#include <sos/dev/auth.h>
 
 #include "crypto/Ecc.hpp"
 #include "crypto/Sha256.hpp"
@@ -21,11 +20,6 @@ operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a) {
   return printer.key("content", var::View(a).to_string<var::GeneralString>());
 }
 
-Printer &operator<<(Printer &printer, const crypto::Dsa::SignatureInfo &a) {
-  return printer
-    .key("hash", var::View(a.hash()).to_string<var::GeneralString>())
-    .key("signature", a.signature().to_string());
-}
 } // namespace printer
 
 using namespace crypto;
@@ -134,15 +128,6 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
   return Signature(buffer);
 }
 
-Dsa::Signature
-DigitalSignatureAlgorithm::sign(const fs::FileObject &file) const {
-  File::LocationScope ls(file);
-
-  const auto hash = Sha256::get_hash(file.seek(0));
-  const auto signature = sign(hash);
-  append(file, signature);
-  return signature;
-}
 
 bool DigitalSignatureAlgorithm::verify(
   const Signature &signature,
@@ -157,78 +142,4 @@ bool DigitalSignatureAlgorithm::verify(
          == 1;
 }
 
-Dsa::SignatureInfo
-DigitalSignatureAlgorithm::get_signature_info(const fs::FileObject &file) {
 
-  File::LocationScope ls(file);
-
-  if (file.size() < sizeof(auth_signature_marker_t)) {
-    return SignatureInfo();
-  }
-  const size_t hash_size
-    = file.size() - sizeof(auth_signature_marker_t);
-
-  auto hash = [](const fs::FileObject &file, size_t hash_size) {
-    Sha256 result;
-    File::LocationScope ls(file);
-    file.seek(0);
-    fs::NullFile().write(file, result, fs::File::Write().set_size(hash_size));
-    return result.output();
-  }(file, hash_size);
-
-  return SignatureInfo().set_hash(hash).set_signature(get_signature(file));
-}
-
-Dsa::Signature
-DigitalSignatureAlgorithm::get_signature(const fs::FileObject &file) {
-  if (file.size() < sizeof(auth_signature_marker_t)) {
-    return Signature();
-  }
-
-  File::LocationScope ls(file);
-
-  const size_t marker_location
-    = file.size() - sizeof(auth_signature_marker_t);
-  auth_signature_marker_t signature;
-  file.seek(marker_location).read(View(signature).fill(0));
-
-  if (
-    (signature.start == AUTH_SIGNATURE_MARKER_START)
-    && (signature.next == AUTH_SIGNATURE_MARKER_NEXT)
-    && (signature.size == AUTH_SIGNATURE_MARKER_SIZE + 512)) {
-    return Signature(View(signature.signature.data));
-  } else {
-    return Signature();
-  }
-}
-
-void DigitalSignatureAlgorithm::append(
-  const fs::FileObject &file,
-  const Signature &signature) {
-
-  File::LocationScope ls(file);
-
-  auth_signature_marker_t marker = {
-      .start = AUTH_SIGNATURE_MARKER_START,
-      .next = AUTH_SIGNATURE_MARKER_NEXT,
-      .size = AUTH_SIGNATURE_MARKER_SIZE + 512};
-
-  var::View(marker.signature.data).copy(signature.data());
-  file.seek(0, File::Whence::end).write(var::View(marker));
-}
-
-bool DigitalSignatureAlgorithm::verify(
-  const fs::FileObject &file,
-  const PublicKey &public_key) {
-  // hash the file up to the marker
-  File::LocationScope ls(file);
-
-  if (file.size() < sizeof(auth_signature_marker_t)) {
-    return false;
-  }
-
-  const auto signature_info = get_signature_info(file);
-
-  return Dsa(KeyPair().set_public_key(public_key))
-    .verify(signature_info.signature(), signature_info.hash());
-}

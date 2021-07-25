@@ -16,7 +16,6 @@
 #endif
 
 #include "Random.hpp"
-#include "Sha256.hpp"
 
 namespace crypto {
 
@@ -169,25 +168,13 @@ public:
     m_key_pair = create_key_pair(value);
   }
 
-
   DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
 
   Signature sign(const var::View message_hash) const;
-  Signature sign(const fs::FileObject & file) const;
 
   bool verify(const Signature &signature, const var::View message_hash);
 
   const KeyPair &key_pair() const { return m_key_pair; }
-
-  class SignatureInfo {
-    API_AC(SignatureInfo, Signature, signature);
-    API_AC(SignatureInfo, Sha256::Hash, hash);
-  };
-
-  static SignatureInfo get_signature_info(const fs::FileObject & file);
-  static Signature get_signature(const fs::FileObject & file);
-  static void append(const fs::FileObject & file, const Signature & signature);
-  static bool verify(const fs::FileObject & file, const PublicKey & public_key);
 
 private:
   KeyPair create_key_pair(Curve value);
@@ -206,8 +193,6 @@ Printer &operator<<(
   const crypto::DigitalSignatureAlgorithm::KeyPair &a);
 Printer &
 operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a);
-Printer &
-operator<<(Printer &printer, const crypto::Dsa::SignatureInfo &a);
 } // namespace printer
 
 #endif // CRYPTOAPI_CRYPTO_ECC_HPP_
