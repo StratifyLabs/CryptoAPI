@@ -53,20 +53,20 @@ public:
   };
 
 
-  template<unsigned KeySize, KeyObjectType Type> class KeyObject {
+  template<size_t KeySize, KeyObjectType Type> class KeyObject {
   public:
     using Buffer = var::Array<u8, KeySize>;
 
     KeyObject() { m_buffer.fill(0); }
 
     KeyObject(const var::StringView value) {
-      API_ASSERT(value.length()/2 != sizeof(Buffer));
+      API_ASSERT(value.length()/2 == sizeof(Buffer));
       var::View(m_buffer).from_string(value);
     }
 
     KeyObject(Buffer buffer) : m_buffer(buffer){}
     KeyObject(var::View value){
-      API_ASSERT(value.size() != KeySize);
+      API_ASSERT(value.size() == KeySize);
       var::View(m_buffer).copy(value);
     }
 
@@ -75,7 +75,12 @@ public:
     }
 
     bool is_valid() const {
-      return true;
+      for(u32 i=0; i < KeySize; i++){
+        if( m_buffer.at(i) != 0 ){
+          return true;
+        }
+      }
+      return false;
     }
 
     bool operator==(const KeyObject &a) const { return data() == a.data(); }
