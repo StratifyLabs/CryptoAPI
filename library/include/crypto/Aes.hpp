@@ -47,15 +47,30 @@ public:
 
     Key& nullify(){
       m_key.fill(0);
+      m_initialization_vector.fill(0);
       return *this;
     }
 
     bool is_null() const {
-      u32 total = 0;
+      return is_key_null() && is_iv_null();
+    }
+
+    bool is_key_null() const {
       for(auto value: m_key){
-        total += value;
+        if( value != 0 ){
+          return false;
+        }
       }
-      return total == 0;
+      return true;
+    }
+
+    bool is_iv_null() const {
+      for(auto value: m_initialization_vector){
+        if( value != 0 ){
+          return false;
+        }
+      }
+      return true;
     }
 
     const Key256 &key256() const { return m_key; }
