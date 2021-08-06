@@ -73,6 +73,14 @@ public:
       return true;
     }
 
+    static constexpr const char * get_null_key256_string(){
+      return "0000000000000000000000000000000000000000000000000000000000000000";
+    }
+
+    static constexpr const char * get_null_key128_string(){
+      return "00000000000000000000000000000000";
+    }
+
     const Key256 &key256() const { return m_key; }
     Key256 get_key256() const { return m_key; }
     Key128 get_key128() const {
