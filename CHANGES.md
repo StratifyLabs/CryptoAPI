@@ -1,3 +1,13 @@
+# Version 1.2.0
+
+## New Features
+
+- Add more ways to construct `Aes::Key` from other keys
+
+## Bug Fixes
+
+- None yet
+
 # Version 1.1.0
 
 ## New Features

@@ -39,6 +39,9 @@ public:
           .copy(var::Data::from_string(options.initialization_vector()));
     }
 
+    Key(const Key256 & key256) : m_key(key256){}
+    Key(const Key256 & key256, const Iv & iv) : m_key(key256), m_initialization_vector(iv){}
+
     Key() {
       // 256-bit key length
       Random().seed().randomize(var::View(m_key));
