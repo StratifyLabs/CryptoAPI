@@ -2,6 +2,7 @@
 
 ## New Features
 
+- Add factory methods to create `Aes::Key` from strings
 - Add more ways to construct `Aes::Key` from other keys
 
 ## Bug Fixes

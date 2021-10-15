@@ -39,8 +39,27 @@ public:
           .copy(var::Data::from_string(options.initialization_vector()));
     }
 
-    Key(const Key256 & key256) : m_key(key256){}
+    Key(const Key256 & key256) : m_key(key256){
+      Random().seed().randomize(var::View(m_initialization_vector));
+    }
+
     Key(const Key256 & key256, const Iv & iv) : m_key(key256), m_initialization_vector(iv){}
+
+    static Key from_string(const var::StringView key){
+      API_ASSERT(key.length() == 32 || key.length() == 64);
+      Key result;
+      var::View(result.m_key).copy(var::Data::from_string(key));
+      return result;
+    }
+
+    static Key from_string(const var::StringView key, const var::StringView iv){
+      API_ASSERT(key.length() == 32 || key.length() == 64);
+      API_ASSERT(iv.length() == 32);
+      Key result;
+      var::View(result.m_key).copy(var::Data::from_string(key));
+      var::View(result.m_initialization_vector).copy(var::Data::from_string(iv));
+      return result;
+    }
 
     Key() {
       // 256-bit key length
@@ -81,6 +100,10 @@ public:
     }
 
     static constexpr const char * get_null_key128_string(){
+      return "00000000000000000000000000000000";
+    }
+
+    static constexpr const char * get_null_iv_string(){
       return "00000000000000000000000000000000";
     }
 
@@ -246,7 +269,13 @@ public:
       const var::Transformer::Transform &options) const override final;
 
   size_t page_size_boundary() const override { return 16; }
+
+private:
+  API_AF(AesCbcDecrypter,size_t,original_size,0);
 };
+
+
+
 
 } // namespace crypto
 
