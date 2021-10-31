@@ -1,6 +1,10 @@
 #include <errno.h>
 #include <string.h>
 
+#if defined __link
+#include <time.h>
+#endif
+
 #include <stdlib.h>
 
 #include "micro_ecc_api.h"
