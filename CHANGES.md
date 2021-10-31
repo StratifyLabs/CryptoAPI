@@ -2,6 +2,7 @@
 
 ## New Features
 
+- Add `CRYPTO_API_IS_TEST` cmake option for building tests
 - Add factory methods to create `Aes::Key` from strings
 - Add more ways to construct `Aes::Key` from other keys
 
