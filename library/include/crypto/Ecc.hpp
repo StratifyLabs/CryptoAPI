@@ -52,31 +52,28 @@ public:
     curve448 = CRYPT_ECC_KEY_PAIR_CURVE448
   };
 
-
-  template<size_t KeySize, KeyObjectType Type> class KeyObject {
+  template <size_t KeySize, KeyObjectType Type> class KeyObject {
   public:
     using Buffer = var::Array<u8, KeySize>;
 
     KeyObject() { m_buffer.fill(0); }
 
     explicit KeyObject(const var::StringView value) {
-      API_ASSERT(value.length()/2 == sizeof(Buffer));
+      API_ASSERT(value.length() / 2 == sizeof(Buffer));
       var::View(m_buffer).from_string(value);
     }
 
-    explicit KeyObject(Buffer buffer) : m_buffer(buffer){}
-    explicit KeyObject(var::View value){
+    explicit KeyObject(Buffer buffer) : m_buffer(buffer) {}
+    explicit KeyObject(var::View value) {
       API_ASSERT(value.size() == KeySize);
       var::View(m_buffer).copy(value);
     }
 
-    API_NO_DISCARD size_t size() const {
-      return KeySize;
-    }
+    API_NO_DISCARD size_t size() const { return KeySize; }
 
     API_NO_DISCARD bool is_valid() const {
-      for(u32 i=0; i < KeySize; i++){
-        if( m_buffer.at(i) != 0 ){
+      for (u32 i = 0; i < KeySize; i++) {
+        if (m_buffer.at(i) != 0) {
           return true;
         }
       }
@@ -90,7 +87,9 @@ public:
     API_NO_DISCARD var::View data() const { return m_buffer; }
     var::View data() { return m_buffer; }
 
-    API_NO_DISCARD auto to_string() const { return var::View(m_buffer).to_string<var::GeneralString>(); }
+    API_NO_DISCARD auto to_string() const {
+      return var::View(m_buffer).to_string<var::GeneralString>();
+    }
 
   private:
     Buffer m_buffer;
@@ -105,9 +104,7 @@ public:
   Ecc(const Ecc &a) = delete;
   Ecc &operator=(const Ecc &a) = delete;
 
-  Ecc(Ecc &&a) noexcept {
-    std::swap(m_context, a.m_context);
-  }
+  Ecc(Ecc &&a) noexcept { std::swap(m_context, a.m_context); }
 
   Ecc &operator=(Ecc &&a) noexcept {
     std::swap(m_context, a.m_context);
@@ -127,7 +124,8 @@ public:
 
   API_NO_DISCARD const PublicKey &public_key() const { return m_public_key; }
 
-  API_NO_DISCARD SharedSecret get_shared_secret(const PublicKey &public_key) const;
+  API_NO_DISCARD SharedSecret
+  get_shared_secret(const PublicKey &public_key) const;
 
 private:
   PublicKey m_public_key;
@@ -162,7 +160,9 @@ public:
     }
 
     API_NO_DISCARD const PublicKey &public_key() const { return m_public_key; }
-    API_NO_DISCARD const PrivateKey &private_key() const { return m_private_key; }
+    API_NO_DISCARD const PrivateKey &private_key() const {
+      return m_private_key;
+    }
 
   private:
     PublicKey m_public_key;
@@ -173,7 +173,9 @@ public:
     m_key_pair = create_key_pair(value);
   }
 
-  explicit DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
+  explicit DigitalSignatureAlgorithm(const KeyPair &key_pair) {
+    set_key_pair(key_pair);
+  }
 
   API_NO_DISCARD Signature sign(var::View message_hash) const;
 

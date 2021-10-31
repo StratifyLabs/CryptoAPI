@@ -36,28 +36,31 @@ public:
     explicit Key(const Construct &options) {
       var::View(m_key).copy(var::Data::from_string(options.key()));
       var::View(m_initialization_vector)
-          .copy(var::Data::from_string(options.initialization_vector()));
+        .copy(var::Data::from_string(options.initialization_vector()));
     }
 
-    explicit Key(const Key256 & key256) : m_key(key256){
+    explicit Key(const Key256 &key256) : m_key(key256) {
       Random().seed().randomize(var::View(m_initialization_vector));
     }
 
-    Key(const Key256 & key256, const Iv & iv) : m_key(key256), m_initialization_vector(iv){}
+    Key(const Key256 &key256, const Iv &iv)
+      : m_key(key256), m_initialization_vector(iv) {}
 
-    static Key from_string(const var::StringView key){
+    static Key from_string(const var::StringView key) {
       API_ASSERT(key.length() == 32 || key.length() == 64);
       Key result;
       var::View(result.m_key).copy(var::Data::from_string(key));
       return result;
     }
 
-    static Key from_string(const var::StringView key, const var::StringView iv){
+    static Key
+    from_string(const var::StringView key, const var::StringView iv) {
       API_ASSERT(key.length() == 32 || key.length() == 64);
       API_ASSERT(iv.length() == 32);
       Key result;
       var::View(result.m_key).copy(var::Data::from_string(key));
-      var::View(result.m_initialization_vector).copy(var::Data::from_string(iv));
+      var::View(result.m_initialization_vector)
+        .copy(var::Data::from_string(iv));
       return result;
     }
 
@@ -67,7 +70,7 @@ public:
       Random().seed().randomize(var::View(m_initialization_vector));
     }
 
-    Key& nullify(){
+    Key &nullify() {
       m_key.fill(0);
       m_initialization_vector.fill(0);
       return *this;
@@ -78,8 +81,8 @@ public:
     }
 
     API_NO_DISCARD bool is_key_null() const {
-      for(auto value: m_key){
-        if( value != 0 ){
+      for (auto value : m_key) {
+        if (value != 0) {
           return false;
         }
       }
@@ -87,23 +90,23 @@ public:
     }
 
     API_NO_DISCARD bool is_iv_null() const {
-      for(auto value: m_initialization_vector){
-        if( value != 0 ){
+      for (auto value : m_initialization_vector) {
+        if (value != 0) {
           return false;
         }
       }
       return true;
     }
 
-    static constexpr const char * get_null_key256_string(){
+    static constexpr const char *get_null_key256_string() {
       return "0000000000000000000000000000000000000000000000000000000000000000";
     }
 
-    static constexpr const char * get_null_key128_string(){
+    static constexpr const char *get_null_key128_string() {
       return "00000000000000000000000000000000";
     }
 
-    static constexpr const char * get_null_iv_string(){
+    static constexpr const char *get_null_iv_string() {
       return "00000000000000000000000000000000";
     }
 
@@ -152,9 +155,7 @@ public:
   Aes(const Aes &a) = delete;
   Aes &operator=(const Aes &aes) = delete;
 
-  Aes(Aes &&a) noexcept {
-    std::swap(m_context, a.m_context);
-  }
+  Aes(Aes &&a) noexcept { std::swap(m_context, a.m_context); }
 
   Aes &operator=(Aes &&a) noexcept {
     std::swap(m_context, a.m_context);
@@ -175,7 +176,8 @@ public:
     return tmp ? (16 - tmp) : 0;
   }
 
-  static var::Data get_padded_data(const var::View input, u8 padding_value = 0xff) {
+  static var::Data
+  get_padded_data(const var::View input, u8 padding_value = 0xff) {
     const auto padding_size = get_padding(input.size());
     auto result = var::Data(input.size() + padding_size);
     var::View(result).fill<u8>(padding_value).copy(input);
@@ -257,7 +259,7 @@ class AesCbcEncrypter : public var::Transformer,
                         public AesAccess<AesCbcEncrypter> {
 public:
   int transform(
-      const var::Transformer::Transform &options) const override final;
+    const var::Transformer::Transform &options) const override final;
 
   size_t page_size_boundary() const override { return 16; }
 };
@@ -266,16 +268,13 @@ class AesCbcDecrypter : public var::Transformer,
                         public AesAccess<AesCbcDecrypter> {
 public:
   int transform(
-      const var::Transformer::Transform &options) const override final;
+    const var::Transformer::Transform &options) const override final;
 
   size_t page_size_boundary() const override { return 16; }
 
 private:
-  API_AF(AesCbcDecrypter,size_t,original_size,0);
+  API_AF(AesCbcDecrypter, size_t, original_size, 0);
 };
-
-
-
 
 } // namespace crypto
 

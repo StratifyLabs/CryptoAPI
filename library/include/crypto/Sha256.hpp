@@ -25,9 +25,7 @@ public:
   Sha256(const Sha256 &) = delete;
   Sha256 &operator=(const Sha256 &) = delete;
 
-  Sha256(Sha256 &&a) noexcept {
-    std::swap(m_context, a.m_context);
-  }
+  Sha256(Sha256 &&a) noexcept { std::swap(m_context, a.m_context); }
 
   Sha256 &operator=(Sha256 &&a) noexcept {
     std::swap(m_context, a.m_context);
@@ -36,7 +34,7 @@ public:
 
   using Hash = var::Array<u8, 32>;
 
-  static Hash from_string(const var::StringView value){
+  static Hash from_string(const var::StringView value) {
     API_ASSERT(value.length() == 64);
     Hash result;
     var::View(result).from_string(value);
@@ -60,17 +58,17 @@ public:
     return var::View(m_output).to_string<var::GeneralString>();
   }
 
-  static Hash get_hash(const fs::FileObject & file){
+  static Hash get_hash(const fs::FileObject &file) {
     Sha256 hash;
     fs::NullFile().write(file, hash);
     return hash.output();
   }
 
-  API_NO_DISCARD static Hash append_aligned_hash(const fs::FileObject &file_object,
-                                  u8 fill = 0xff);
+  API_NO_DISCARD static Hash
+  append_aligned_hash(const fs::FileObject &file_object, u8 fill = 0xff);
 
-  API_NO_DISCARD static bool check_aligned_hash(const fs::FileObject &file_object);
-
+  API_NO_DISCARD static bool
+  check_aligned_hash(const fs::FileObject &file_object);
 
   API_NO_DISCARD static constexpr size_t page_size() {
 #if defined __link

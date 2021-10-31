@@ -7,6 +7,7 @@
 
 ## Bug Fixes
 
+- Reformat using clang-format
 - Tidy
 
 # Version 1.1.0

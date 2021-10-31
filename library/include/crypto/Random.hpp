@@ -23,9 +23,7 @@ public:
   Random &seed();
   Random &seed(var::View source_data);
 
-  Random(Random &&a) noexcept {
-    std::swap(m_context, a.m_context);
-  }
+  Random(Random &&a) noexcept { std::swap(m_context, a.m_context); }
 
   Random &operator=(Random &&a) noexcept {
     std::swap(m_context, a.m_context);

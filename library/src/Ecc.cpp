@@ -127,7 +127,6 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
   return Signature(buffer);
 }
 
-
 bool DigitalSignatureAlgorithm::verify(
   const Signature &signature,
   const var::View message_hash) {
@@ -140,5 +139,3 @@ bool DigitalSignatureAlgorithm::verify(
            signature.size())
          == 1;
 }
-
-
