@@ -7,7 +7,7 @@ using namespace crypto;
 Sha256::Api Sha256::m_api;
 
 Sha256::Sha256() {
-  if (api().is_valid() == false) {
+  if (!api().is_valid()) {
     exit_fatal("api api missing");
   }
   API_RETURN_IF_ERROR();
@@ -35,7 +35,7 @@ const Sha256 &Sha256::update(const var::View &input) const {
 }
 
 void Sha256::finish() const {
-  if (m_is_finished == false) {
+  if (!m_is_finished) {
     API_RETURN_VALUE_IF_ERROR();
     m_is_finished = true;
     API_SYSTEM_CALL(
@@ -58,7 +58,7 @@ Sha256::Hash Sha256::append_aligned_hash(const fs::FileObject &file_object,
     return padding_length;
   }(file_object.size());
 
-  var::Array<u8, sizeof(Hash)> padding;
+  var::Array<u8, sizeof(Hash)> padding{};
   padding.fill(fill);
 
   file_object.seek(0, fs::File::Whence::end)

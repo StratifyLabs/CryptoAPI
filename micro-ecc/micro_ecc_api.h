@@ -8,8 +8,6 @@
 extern "C" {
 #endif
 
-
-
 extern const crypt_ecc_api_t micro_ecc_api;
 
 #if defined __StratifyOS__

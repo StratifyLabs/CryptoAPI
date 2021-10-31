@@ -10,7 +10,7 @@ Random::Api Random::m_api;
 
 Random::Random() {
   API_RETURN_IF_ERROR();
-  if (api().is_valid() == false) {
+  if (!api().is_valid()) {
     API_RETURN_ASSIGN_ERROR("missing api", ENOTSUP);
   } else {
     API_RETURN_IF_ERROR();
@@ -28,7 +28,7 @@ Random::~Random() {
 }
 
 Random &Random::seed() {
-  var::Array<u32, 64> list;
+  var::Array<u32, 64> list{};
   for (u32 &item : list) {
     item = ~chrono::ClockTime::get_system_time().nanoseconds();
     chrono::wait(chrono::MicroTime(item % 1000));

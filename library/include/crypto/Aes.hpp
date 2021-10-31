@@ -39,7 +39,7 @@ public:
           .copy(var::Data::from_string(options.initialization_vector()));
     }
 
-    Key(const Key256 & key256) : m_key(key256){
+    explicit Key(const Key256 & key256) : m_key(key256){
       Random().seed().randomize(var::View(m_initialization_vector));
     }
 
@@ -73,11 +73,11 @@ public:
       return *this;
     }
 
-    bool is_null() const {
+    API_NO_DISCARD bool is_null() const {
       return is_key_null() && is_iv_null();
     }
 
-    bool is_key_null() const {
+    API_NO_DISCARD bool is_key_null() const {
       for(auto value: m_key){
         if( value != 0 ){
           return false;
@@ -86,7 +86,7 @@ public:
       return true;
     }
 
-    bool is_iv_null() const {
+    API_NO_DISCARD bool is_iv_null() const {
       for(auto value: m_initialization_vector){
         if( value != 0 ){
           return false;
@@ -107,9 +107,9 @@ public:
       return "00000000000000000000000000000000";
     }
 
-    const Key256 &key256() const { return m_key; }
-    Key256 get_key256() const { return m_key; }
-    Key128 get_key128() const {
+    API_NO_DISCARD const Key256 &key256() const { return m_key; }
+    API_NO_DISCARD Key256 get_key256() const { return m_key; }
+    API_NO_DISCARD Key128 get_key128() const {
       Key128 result;
       var::View(result).copy(m_key);
       return result;
@@ -125,25 +125,25 @@ public:
       return *this;
     }
 
-    const InitializationVector &initialization_vector() const {
+    API_NO_DISCARD const InitializationVector &initialization_vector() const {
       return m_initialization_vector;
     }
 
-    var::GeneralString get_key256_string() const {
+    API_NO_DISCARD var::GeneralString get_key256_string() const {
       return var::View(m_key).to_string<var::GeneralString>();
     }
 
-    var::KeyString get_key128_string() const {
+    API_NO_DISCARD var::KeyString get_key128_string() const {
       return var::View(m_key).to_string<var::KeyString>();
     }
 
-    var::KeyString get_initialization_vector_string() const {
+    API_NO_DISCARD var::KeyString get_initialization_vector_string() const {
       return var::View(m_initialization_vector).to_string<var::KeyString>();
     }
 
   private:
-    Key256 m_key;
-    InitializationVector m_initialization_vector;
+    Key256 m_key{};
+    InitializationVector m_initialization_vector{};
   };
 
   Aes();
@@ -152,11 +152,11 @@ public:
   Aes(const Aes &a) = delete;
   Aes &operator=(const Aes &aes) = delete;
 
-  Aes(Aes &&a){
+  Aes(Aes &&a) noexcept {
     std::swap(m_context, a.m_context);
   }
 
-  Aes &operator=(Aes &&a){
+  Aes &operator=(Aes &&a) noexcept {
     std::swap(m_context, a.m_context);
     return *this;
   }

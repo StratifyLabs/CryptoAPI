@@ -10,8 +10,6 @@
 #define CRYPT_RANDOM_API_REQUEST &mbedtls_crypt_random_api
 #endif
 
-#include "api/api.hpp"
-
 #include "var/Data.hpp"
 #include "var/String.hpp"
 
@@ -23,23 +21,23 @@ public:
   ~Random();
 
   Random &seed();
-  Random &seed(const var::View source_data);
+  Random &seed(var::View source_data);
 
-  Random(Random &&a){
+  Random(Random &&a) noexcept {
     std::swap(m_context, a.m_context);
   }
 
-  Random &operator=(Random &&a){
+  Random &operator=(Random &&a) noexcept {
     std::swap(m_context, a.m_context);
     return *this;
   }
 
-  int transform(const Transform &options) const override {
+  API_NO_DISCARD int transform(const Transform &options) const override {
     randomize(options.output());
     return options.output().size();
   }
 
-  const Random &randomize(const var::View destination_data) const;
+  const Random &randomize(var::View destination_data) const;
 
   template <class StringType> StringType to_string(size_t length) const {
     char data[length];
@@ -47,7 +45,7 @@ public:
     randomize(data_view);
     return data_view.to_string<StringType>();
   }
-  var::Data to_data(u32 size) const;
+  API_NO_DISCARD var::Data to_data(u32 size) const;
 
 private:
   using Api = api::Api<crypt_random_api_t, CRYPT_RANDOM_API_REQUEST>;

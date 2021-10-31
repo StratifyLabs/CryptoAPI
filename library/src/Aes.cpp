@@ -1,11 +1,9 @@
 // Copyright 2020-2021 Tyler Gilbert and Stratify Labs, Inc; see LICENSE.md
 
-#include <errno.h>
 #include <printer/Printer.hpp>
-#include <var.hpp>
 
 #include "crypto/Aes.hpp"
-#include "crypto/Random.hpp"
+
 
 namespace printer {
 class Printer;
@@ -19,6 +17,8 @@ Printer &operator<<(Printer &printer, const crypto::Aes::Key &a) {
 } // namespace printer
 
 using namespace crypto;
+using namespace var;
+
 Aes::Api Aes::m_api;
 
 Aes::Aes() {

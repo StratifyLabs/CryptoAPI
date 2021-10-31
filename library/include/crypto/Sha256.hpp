@@ -25,11 +25,11 @@ public:
   Sha256(const Sha256 &) = delete;
   Sha256 &operator=(const Sha256 &) = delete;
 
-  Sha256(Sha256 &&a){
+  Sha256(Sha256 &&a) noexcept {
     std::swap(m_context, a.m_context);
   }
 
-  Sha256 &operator=(Sha256 &&a){
+  Sha256 &operator=(Sha256 &&a) noexcept {
     std::swap(m_context, a.m_context);
     return *this;
   }
@@ -66,13 +66,13 @@ public:
     return hash.output();
   }
 
-  static Hash append_aligned_hash(const fs::FileObject &file_object,
+  API_NO_DISCARD static Hash append_aligned_hash(const fs::FileObject &file_object,
                                   u8 fill = 0xff);
 
-  static bool check_aligned_hash(const fs::FileObject &file_object);
+  API_NO_DISCARD static bool check_aligned_hash(const fs::FileObject &file_object);
 
 
-  static constexpr size_t page_size() {
+  API_NO_DISCARD static constexpr size_t page_size() {
 #if defined __link
     return 4096;
 #else
@@ -86,7 +86,7 @@ private:
 
   void *m_context = nullptr;
   mutable bool m_is_finished = false;
-  Hash m_output;
+  Hash m_output{};
 
   void finish() const;
   static Api &api() { return m_api; }

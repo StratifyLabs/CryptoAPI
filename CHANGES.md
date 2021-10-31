@@ -7,7 +7,7 @@
 
 ## Bug Fixes
 
-- None yet
+- Tidy
 
 # Version 1.1.0
 

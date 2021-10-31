@@ -59,22 +59,22 @@ public:
 
     KeyObject() { m_buffer.fill(0); }
 
-    KeyObject(const var::StringView value) {
+    explicit KeyObject(const var::StringView value) {
       API_ASSERT(value.length()/2 == sizeof(Buffer));
       var::View(m_buffer).from_string(value);
     }
 
-    KeyObject(Buffer buffer) : m_buffer(buffer){}
-    KeyObject(var::View value){
+    explicit KeyObject(Buffer buffer) : m_buffer(buffer){}
+    explicit KeyObject(var::View value){
       API_ASSERT(value.size() == KeySize);
       var::View(m_buffer).copy(value);
     }
 
-    size_t size() const {
+    API_NO_DISCARD size_t size() const {
       return KeySize;
     }
 
-    bool is_valid() const {
+    API_NO_DISCARD bool is_valid() const {
       for(u32 i=0; i < KeySize; i++){
         if( m_buffer.at(i) != 0 ){
           return true;
@@ -87,10 +87,10 @@ public:
 
     bool operator!=(const KeyObject &a) const { return data() != a.data(); }
 
-    var::View data() const { return m_buffer; }
+    API_NO_DISCARD var::View data() const { return m_buffer; }
     var::View data() { return m_buffer; }
 
-    auto to_string() const { return var::View(m_buffer).to_string<var::GeneralString>(); }
+    API_NO_DISCARD auto to_string() const { return var::View(m_buffer).to_string<var::GeneralString>(); }
 
   private:
     Buffer m_buffer;
@@ -105,11 +105,11 @@ public:
   Ecc(const Ecc &a) = delete;
   Ecc &operator=(const Ecc &a) = delete;
 
-  Ecc(Ecc &&a){
+  Ecc(Ecc &&a) noexcept {
     std::swap(m_context, a.m_context);
   }
 
-  Ecc &operator=(Ecc &&a){
+  Ecc &operator=(Ecc &&a) noexcept {
     std::swap(m_context, a.m_context);
     return *this;
   }
@@ -122,12 +122,12 @@ protected:
 class SecretExchange : public Ecc {
 public:
   using SharedSecret = var::Array<u8, 32>;
-  SecretExchange(Curve curve = Curve::secp256r1);
+  explicit SecretExchange(Curve curve = Curve::secp256r1);
   ~SecretExchange();
 
-  const PublicKey &public_key() const { return m_public_key; }
+  API_NO_DISCARD const PublicKey &public_key() const { return m_public_key; }
 
-  SharedSecret get_shared_secret(const PublicKey &public_key) const;
+  API_NO_DISCARD SharedSecret get_shared_secret(const PublicKey &public_key) const;
 
 private:
   PublicKey m_public_key;
@@ -161,25 +161,25 @@ public:
       return *this;
     }
 
-    const PublicKey &public_key() const { return m_public_key; }
-    const PrivateKey &private_key() const { return m_private_key; }
+    API_NO_DISCARD const PublicKey &public_key() const { return m_public_key; }
+    API_NO_DISCARD const PrivateKey &private_key() const { return m_private_key; }
 
   private:
     PublicKey m_public_key;
     PrivateKey m_private_key;
   };
 
-  DigitalSignatureAlgorithm(Curve value) {
+  explicit DigitalSignatureAlgorithm(Curve value) {
     m_key_pair = create_key_pair(value);
   }
 
-  DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
+  explicit DigitalSignatureAlgorithm(const KeyPair &key_pair) { set_key_pair(key_pair); }
 
-  Signature sign(const var::View message_hash) const;
+  API_NO_DISCARD Signature sign(var::View message_hash) const;
 
-  bool verify(const Signature &signature, const var::View message_hash);
+  bool verify(const Signature &signature, var::View message_hash);
 
-  const KeyPair &key_pair() const { return m_key_pair; }
+  API_NO_DISCARD const KeyPair &key_pair() const { return m_key_pair; }
 
 private:
   KeyPair create_key_pair(Curve value);

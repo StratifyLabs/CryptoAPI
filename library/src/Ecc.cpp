@@ -1,8 +1,5 @@
 #include <printer/Printer.hpp>
 
-#include <fs.hpp>
-#include <var.hpp>
-
 #include "crypto/Ecc.hpp"
 #include "crypto/Sha256.hpp"
 
@@ -23,6 +20,8 @@ operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a) {
 } // namespace printer
 
 using namespace crypto;
+using namespace fs;
+using namespace var;
 Ecc::Api Ecc::m_api;
 
 Ecc::Ecc() { api()->init(&m_context); }
@@ -46,7 +45,7 @@ SecretExchange::SecretExchange(Curve curve) {
   m_public_key = PublicKey(public_buffer);
 }
 
-SecretExchange::~SecretExchange() {}
+SecretExchange::~SecretExchange() = default;
 
 SecretExchange::SharedSecret
 SecretExchange::get_shared_secret(const PublicKey &public_key) const {
