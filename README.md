@@ -2,6 +2,9 @@
 
 `CryptoAPI` is a cryptography access API following the Stratify Labs [API framework](https://github.com/StratifyLabs/API). On desktop applications, it uses `mbedtls` under the hood for cryptography functions. On embedded, it will use whatever crypto library is provided by Stratify OS.
 
+
+## How to Build
+
 The `CryptoAPI` library is designed to be a CMake sub-project. To build, please use one of these projects:
 
 - Desktop [Command Line Interface](https://github.com/StratifyLabs/cli)
