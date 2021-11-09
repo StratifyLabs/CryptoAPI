@@ -1,10 +1,11 @@
 # CryptoAPI
 
-CryptoAPI is a cryptography access API following the Stratify Labs [API framework](https://github.com/StratifyLabs/API). On desktop applications, it uses mbedtls under the hood for cryptography functions. On embedded, it will use whatever crypto library is provided by Stratify OS.
+`CryptoAPI` is a cryptography access API following the Stratify Labs [API framework](https://github.com/StratifyLabs/API). On desktop applications, it uses `mbedtls` under the hood for cryptography functions. On embedded, it will use whatever crypto library is provided by Stratify OS.
 
-## Building
+The `CryptoAPI` library is designed to be a CMake sub-project. To build, please use one of these projects:
 
-The CryptoAPI is designed to be built as part of an SDK super project. Instructions for building are at the [SDK API project](https://github.com/StratifyLabs/SdkAPI).
+- Desktop [Command Line Interface](https://github.com/StratifyLabs/cli)
+- [Stratify OS on Nucleo-144](https://github.com/StratifyLabs/StratifyOS-Nucleo144)
 
 ## Usage
 
