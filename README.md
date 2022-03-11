@@ -14,7 +14,7 @@ The `CryptoAPI` library is designed to be a CMake sub-project. To build, please 
 
 ### Random Number Generator
 
-```c++
+```cpp
 #include <crypto.hpp>
 
 //randomize a buffer
@@ -28,7 +28,7 @@ const auto random_string = Random().to_string<var::GeneralString>(16);
 
 ### AES
 
-```c++
+```cpp
 #include <crypto.hpp>
 
 const auto key = Key(); //random key and IV
@@ -57,7 +57,7 @@ Aes()
 
 ### SHA256 Hash
 
-```c++
+```cpp
 #include <crypto.hpp>
 
 const auto str = "Hello World\n";
