@@ -2,3 +2,4 @@
 cmake*_link/
 cmake*_arm/
 *.user
+doc/
