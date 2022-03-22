@@ -1,8 +1,17 @@
-# Version 1.2.0
+# Version 1.3.0
 
 ## New Features
 
 - Add `doxygen` file for documentation generation
+
+## Bug Fixes
+
+- Use `cpp` codeblocks rather than `c++` in markdown docs
+
+# Version 1.2.0
+
+## New Features
+
 - Update `CMakeLists.txt` to require setup of SDK in a super-project
 - Add `CRYPTO_API_IS_TEST` cmake option for building tests
 - Add factory methods to create `Aes::Key` from strings
