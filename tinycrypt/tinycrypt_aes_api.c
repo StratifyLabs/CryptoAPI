@@ -131,7 +131,7 @@ static int aes_decrypt_ctr(
 
 const crypt_aes_api_t tinycrypt_aes_api = {
   .sos_api
-  = {.name = "tinycrypt_aes", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+  = {.name = "tinycrypt_aes", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
   .init = aes_init,
   .deinit = aes_deinit,
   .set_key = aes_set_key,
@@ -145,7 +145,7 @@ const crypt_aes_api_t tinycrypt_aes_api = {
 #if __StratifyOS__
 const crypt_aes_api_t tinycrypt_aes_root_api = {
     .sos_api
-    = {.name = "tinycrypt_aes_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    = {.name = "tinycrypt_aes_root", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
     .init = aes_root_init,
     .deinit = aes_root_deinit,
     .set_key = aes_set_key,

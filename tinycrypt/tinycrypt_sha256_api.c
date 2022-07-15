@@ -67,7 +67,7 @@ static int sha256_finish(void *context, unsigned char *output, u32 size) {
 
 const crypt_hash_api_t tinycrypt_sha256_api = {
   .sos_api
-  = {.name = "tinycrypt_sha256", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+  = {.name = "tinycrypt_sha256", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
   .init = sha256_init,
   .deinit = sha256_deinit,
   .start = sha256_start,
@@ -78,7 +78,7 @@ const crypt_hash_api_t tinycrypt_sha256_api = {
 #if __StratifyOS__
 const crypt_hash_api_t tinycrypt_sha256_root_api = {
     .sos_api
-    = {.name = "tinycrypt_sha256_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+    = {.name = "tinycrypt_sha256_root", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
     .init = sha256_root_init,
     .deinit = sha256_root_deinit,
     .start = sha256_start,

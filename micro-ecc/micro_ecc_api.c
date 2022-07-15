@@ -237,7 +237,7 @@ int rng_function(uint8_t *dest, unsigned int size) {
 }
 
 const crypt_ecc_api_t micro_ecc_api = {
-  .sos_api = {.name = "micro_ecc", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+  .sos_api = {.name = "micro_ecc", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
   .init = ecc_init,
   .deinit = ecc_deinit,
   .dh_create_key_pair = ecc_dh_create_key_pair,
@@ -251,7 +251,7 @@ const crypt_ecc_api_t micro_ecc_api = {
 #if defined __StratifyOS__
 const crypt_ecc_api_t micro_ecc_root_api = {
   .sos_api
-  = {.name = "micro_ecc_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+  = {.name = "micro_ecc_root", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
   .init = ecc_root_init,
   .deinit = ecc_root_deinit,
   .dh_create_key_pair = ecc_dh_create_key_pair,
@@ -264,7 +264,7 @@ const crypt_ecc_api_t micro_ecc_root_api = {
 
 const crypt_ecc_api_t micro_ecc_verify_root_api = {
   .sos_api
-  = {.name = "micro_ecc_verify_root", .version = 0x0001, .git_hash = SOS_GIT_HASH},
+  = {.name = "micro_ecc_verify_root", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
   .init = ecc_root_init,
   .deinit = ecc_root_deinit,
   .dh_create_key_pair = NULL,
