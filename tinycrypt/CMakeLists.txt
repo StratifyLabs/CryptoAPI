@@ -88,4 +88,4 @@ install(DIRECTORY
 	DESTINATION include/tinycrypt)
 
 install(FILES ${PROJECT_NAME}.cmake
-	DESTINATION ${CMSDK_PATH}/cmake/targets)
+	DESTINATION ${CMSDK_LOCAL_PATH}/cmake/targets)

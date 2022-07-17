@@ -70,4 +70,4 @@ endif()
 cmsdk_library_add_arch_targets("${RELEASE_OPTIONS}" ${CMSDK_ARCH} "")
 
 install(FILES ${PROJECT_NAME}.cmake
-  DESTINATION ${CMSDK_PATH}/cmake/targets)
+  DESTINATION ${CMSDK_LOCAL_PATH}/cmake/targets)
