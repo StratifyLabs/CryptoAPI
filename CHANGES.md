@@ -3,6 +3,7 @@
 ## New Features
 
 - Add `doxygen` file for documentation generation
+- Update cmake to use `CMakeSDK` v2.0
 
 ## Bug Fixes
 
