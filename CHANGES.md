@@ -4,6 +4,8 @@
 
 - Add `doxygen` file for documentation generation
 - Update cmake to use `CMakeSDK` v2.0
+- Use `cmsdk2_` functions for build
+
 
 ## Bug Fixes
 
