@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.6)
-
 set(GIT_REPOSITORY "https://github.com/kmackay/micro-ecc.git")
 set(GIT_BRANCH "master")
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
@@ -9,9 +8,7 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
-
 project(uECC CXX C ASM)
-
 set(SOURCE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
 set(INCLUDE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc)
 set(UECC_SOURCES
@@ -22,52 +19,44 @@ set(UECC_SOURCES
   ${INCLUDE_FOLDER}/uECC_vli.h
   ${INCLUDE_FOLDER}/types.h
   )
-
 if(CMSDK_IS_ARM)
   set(LIB_OPTION kernel)
 endif()
-
-cmsdk_library_target(RELEASE ${PROJECT_NAME} "${LIB_OPTION}" release ${CMSDK_ARCH})
-
-add_library(${RELEASE_TARGET} STATIC)
-
+cmsdk2_add_library(
+  NAME ${PROJECT_NAME}
+  OPTION "${LIB_OPTION}"
+  CONFIG release
+  ARCH ${CMSDK_ARCH}
+  TARGET RELEASE_TARGET)
 target_sources(${RELEASE_TARGET}
   PRIVATE
-  ${UECC_SOURCES}
-  )
-
+  ${UECC_SOURCES})
 target_compile_definitions(${RELEASE_TARGET}
   PUBLIC
   HAVE_CONFIG_H=1
   PRIVATE
-  IS_LOCAL_BUILD=1
-  )
-
-target_compile_options(${RELEASE_TARGET}
-  PUBLIC
-  -Os
-  )
-
+  IS_LOCAL_BUILD=1)
+target_compile_options(${RELEASE_TARGET} PUBLIC ${API_PUBLIC_COMPILE_OPTIONS})
 target_include_directories(${RELEASE_TARGET}
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/micro-ecc
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-
-cmsdk_library_target(DEBUG ${PROJECT_NAME} "${LIB_OPTION}" debug ${CMSDK_ARCH})
-add_library(${DEBUG_TARGET} STATIC)
-cmsdk_copy_target(${RELEASE_TARGET} ${DEBUG_TARGET})
-cmsdk_library_add_arch_targets("${DEBUG_OPTIONS}" ${CMSDK_ARCH} "")
-
+  ${CMAKE_CURRENT_SOURCE_DIR})
+cmsdk2_add_library(
+  NAME ${PROJECT_NAME}
+  OPTION "${LIB_OPTION}"
+  CONFIG debug
+  ARCH ${CMSDK_ARCH}
+  TARGET DEBUG_TARGET)
+cmsdk2_copy_target(
+  SOURCE ${RELEASE_TARGET}
+  DESTINATION ${DEBUG_TARGET})
+target_compile_options(${DEBUG_TARGET} PUBLIC ${API_PUBLIC_DEBUG_COMPILE_OPTIONS})
 if(CMSDK_IS_LINUX)
   target_link_libraries(${DEBUG_TARGET} PRIVATE bsd)
   target_link_libraries(${RELEASE_TARGET} PRIVATE bsd)
 endif()
-
-cmsdk_library_add_arch_targets("${RELEASE_OPTIONS}" ${CMSDK_ARCH} "")
-
 install(FILES ${PROJECT_NAME}.cmake
   DESTINATION ${CMSDK_LOCAL_PATH}/cmake/targets)

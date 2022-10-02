@@ -1,8 +1,7 @@
 set(LIBRARIES VarAPI FsAPI InetAPI)
-if (${CMSDK_IS_LINK})
-  set(LIBRARIES uECC ${LIBRARIES})
-endif ()
+if(${CMSDK_IS_LINK})
+  list(APPEND LIBRARIES uECC)
+endif()
 api2_add_library(
   NAME ${PROJECT_NAME}
-  DEPENDENCIES ${LIBRARIES}
-)
+  DEPENDENCIES ${LIBRARIES})
