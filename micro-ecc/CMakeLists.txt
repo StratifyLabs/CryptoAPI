@@ -54,6 +54,14 @@ cmsdk2_copy_target(
   SOURCE ${RELEASE_TARGET}
   DESTINATION ${DEBUG_TARGET})
 target_compile_options(${DEBUG_TARGET} PUBLIC ${API_PUBLIC_DEBUG_COMPILE_OPTIONS})
+if(CMSDK_IS_ARM)
+  cmsdk2_library_add_dependencies(
+    TARGET ${RELEASE_TARGET}
+    DEPENDENCIES StratifyOS_interface)
+  cmsdk2_library_add_dependencies(
+    TARGET ${DEBUG_TARGET}
+    DEPENDENCIES StratifyOS_interface)
+endif()
 if(CMSDK_IS_LINUX)
   target_link_libraries(${DEBUG_TARGET} PRIVATE bsd)
   target_link_libraries(${RELEASE_TARGET} PRIVATE bsd)

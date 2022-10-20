@@ -70,12 +70,14 @@ cmsdk2_add_library(
 	TARGET DEBUG_TARGET)
 cmsdk2_copy_target(SOURCE ${RELEASE_TARGET} DESTINATION ${DEBUG_TARGET})
 target_compile_options(${DEBUG_TARGET} PUBLIC ${API_PUBLIC_DEBUG_COMPILE_OPTIONS})
-cmsdk2_library_add_dependencies(
-	TARGET ${DEBUG_TARGET}
-	DEPENDENCIES "")
-cmsdk2_library_add_dependencies(
-	TARGET ${RELEASE_TARGET}
-	DEPENDENCIES "")
+if(CMSDK_IS_ARM)
+	cmsdk2_library_add_dependencies(
+		TARGET ${RELEASE_TARGET}
+		DEPENDENCIES StratifyOS_interface)
+	cmsdk2_library_add_dependencies(
+		TARGET ${DEBUG_TARGET}
+		DEPENDENCIES StratifyOS_interface)
+endif()
 install(DIRECTORY
 	${TINYCRYPT_INCLUDE_FOLDER}
 	DESTINATION include/tinycrypt)
