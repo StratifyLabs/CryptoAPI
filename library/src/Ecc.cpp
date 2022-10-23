@@ -22,30 +22,44 @@ operator<<(Printer &printer, const crypto::SecretExchange::SharedSecret &a) {
 using namespace crypto;
 using namespace fs;
 using namespace var;
-Ecc::Api Ecc::m_api;
 
-Ecc::Ecc() { api()->init(&m_context); }
-Ecc::~Ecc() { api()->deinit(&m_context); }
+namespace {
+auto &ecc_api() {
+  static api::Api<crypt_ecc_api_t, CRYPT_ECC_API_REQUEST> instance;
+  return instance;
+}
+} // namespace
+
+Ecc::Ecc()
+  : m_state{
+    []() {
+      void *context = nullptr;
+      ecc_api()->init(&context);
+      return State{context};
+    }(),
+    &deleter} {}
+
+void Ecc::deleter(State *state) {
+  if( state->context ) {
+    ecc_api()->deinit(&state->context);
+  }
+}
 
 SecretExchange::SecretExchange(Curve curve) {
-  PublicKey::Buffer public_buffer;
-
-  public_buffer.fill(0);
-  u32 public_key_size = public_buffer.count();
+  auto public_buffer = PublicKey::Buffer().fill(0);
+  auto public_key_size = u32(public_buffer.count());
   API_RETURN_IF_ERROR();
 
   API_SYSTEM_CALL(
     "failed to create DH key pair",
-    api()->dh_create_key_pair(
-      m_context,
+    ecc_api()->dh_create_key_pair(
+      m_state->context,
       static_cast<crypt_ecc_key_pair_t>(curve),
       public_buffer.data(),
       &public_key_size));
 
   m_public_key = PublicKey(public_buffer);
 }
-
-SecretExchange::~SecretExchange() = default;
 
 SecretExchange::SharedSecret
 SecretExchange::get_shared_secret(const PublicKey &public_key) const {
@@ -55,8 +69,8 @@ SecretExchange::get_shared_secret(const PublicKey &public_key) const {
 
   API_SYSTEM_CALL(
     "failed to calculate DH shared secret",
-    api()->dh_calculate_shared_secret(
-      m_context,
+    ecc_api()->dh_calculate_shared_secret(
+      m_state->context,
       public_key.data().to_const_u8(),
       public_key.size(),
       result.data(),
@@ -77,8 +91,8 @@ DigitalSignatureAlgorithm::create_key_pair(Curve value) {
 
   API_SYSTEM_CALL(
     "failed to create DSA key pair",
-    api()->dsa_create_key_pair(
-      m_context,
+    ecc_api()->dsa_create_key_pair(
+      m_state->context,
       static_cast<crypt_ecc_key_pair_t>(value),
       public_key_buffer.data(),
       &public_key_size,
@@ -98,8 +112,8 @@ void DigitalSignatureAlgorithm::set_key_pair(const KeyPair &value) {
   m_key_pair = value;
   API_SYSTEM_CALL(
     "failed to set DSA key pair",
-    api()->dsa_set_key_pair(
-      m_context,
+    ecc_api()->dsa_set_key_pair(
+      m_state->context,
       value.public_key().data().to_const_u8(),
       value.public_key().size(),
       value.private_key().data().to_const_u8(),
@@ -115,8 +129,8 @@ DigitalSignatureAlgorithm::sign(const var::View message_hash) const {
 
   API_SYSTEM_CALL(
     "Failed to sign hash",
-    api()->dsa_sign(
-      m_context,
+    ecc_api()->dsa_sign(
+      m_state->context,
       message_hash.to_const_u8(),
       message_hash.size(),
       buffer.data(),
@@ -131,8 +145,8 @@ bool DigitalSignatureAlgorithm::verify(
   const Signature &signature,
   const var::View message_hash) {
 
-  return api()->dsa_verify(
-           m_context,
+  return ecc_api()->dsa_verify(
+           m_state->context,
            message_hash.to_const_u8(),
            message_hash.size(),
            signature.data().to_const_u8(),

@@ -20,27 +20,10 @@ namespace crypto {
 class Sha256 : public api::ExecutionContext, public var::Transformer {
 public:
   Sha256();
-  ~Sha256();
-
-  Sha256(const Sha256 &) = delete;
-  Sha256 &operator=(const Sha256 &) = delete;
-
-  Sha256(Sha256 &&a) noexcept { std::swap(m_context, a.m_context); }
-
-  Sha256 &operator=(Sha256 &&a) noexcept {
-    std::swap(m_context, a.m_context);
-    return *this;
-  }
 
   using Hash = var::Array<u8, 32>;
 
-  static Hash from_string(const var::StringView value) {
-    API_ASSERT(value.length() == 64);
-    Hash result;
-    var::View(result).from_string(value);
-    return result;
-  }
-
+  static Hash from_string(const var::StringView value);
   const Sha256 &update(const var::View &data) const;
   const Hash &output() const {
     finish();
@@ -58,11 +41,7 @@ public:
     return var::View(m_output).to_string<var::GeneralString>();
   }
 
-  static Hash get_hash(const fs::FileObject &file) {
-    Sha256 hash;
-    fs::NullFile().write(file, hash);
-    return hash.output();
-  }
+  static Hash get_hash(const fs::FileObject &file);
 
   API_NO_DISCARD static Hash
   append_aligned_hash(const fs::FileObject &file_object, u8 fill = 0xff);
@@ -79,15 +58,16 @@ public:
   }
 
 private:
-  using Api = api::Api<crypt_hash_api_t, CRYPT_SHA256_API_REQUEST>;
-  static Api m_api;
+  struct State {
+    void * context;
+  };
+  static void deleter(State * state);
 
-  void *m_context = nullptr;
+  api::SystemResource<State, decltype(&deleter)> m_state;
   mutable bool m_is_finished = false;
   Hash m_output{};
 
   void finish() const;
-  static Api &api() { return m_api; }
 };
 
 } // namespace crypto

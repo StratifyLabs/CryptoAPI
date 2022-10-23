@@ -99,31 +99,20 @@ public:
   using PrivateKey = KeyObject<32, KeyObjectType::private_key>;
 
   Ecc();
-  ~Ecc();
-
-  Ecc(const Ecc &a) = delete;
-  Ecc &operator=(const Ecc &a) = delete;
-
-  Ecc(Ecc &&a) noexcept { std::swap(m_context, a.m_context); }
-
-  Ecc &operator=(Ecc &&a) noexcept {
-    std::swap(m_context, a.m_context);
-    return *this;
-  }
 
 protected:
-  void *m_context = nullptr;
-  static Api &api() { return m_api; }
+  struct State {
+    void *context = nullptr;
+  };
+  static void deleter(State *context);
+  api::SystemResource<State, decltype(&deleter)> m_state;
 };
 
 class SecretExchange : public Ecc {
 public:
   using SharedSecret = var::Array<u8, 32>;
   explicit SecretExchange(Curve curve = Curve::secp256r1);
-  ~SecretExchange();
-
   API_NO_DISCARD const PublicKey &public_key() const { return m_public_key; }
-
   API_NO_DISCARD SharedSecret
   get_shared_secret(const PublicKey &public_key) const;
 
@@ -134,7 +123,6 @@ private:
 class DigitalSignatureAlgorithm : public Ecc {
 public:
   using Signature = KeyObject<64, KeyObjectType::signature>;
-  using SharedSecret = KeyObject<32, KeyObjectType::shared_secret>;
 
   class KeyPair {
   public:
@@ -169,7 +157,7 @@ public:
     PrivateKey m_private_key;
   };
 
-  explicit DigitalSignatureAlgorithm(Curve value) {
+  explicit DigitalSignatureAlgorithm(Curve value = Curve::secp256r1) {
     m_key_pair = create_key_pair(value);
   }
 

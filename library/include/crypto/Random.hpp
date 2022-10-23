@@ -18,7 +18,6 @@ namespace crypto {
 class Random : public api::ExecutionContext, public var::Transformer {
 public:
   Random();
-  ~Random();
 
   Random &seed();
   Random &seed(var::View source_data);
@@ -35,6 +34,12 @@ public:
     return options.output().size();
   }
 
+  template <typename ResultType> ResultType randomize() const {
+    ResultType result;
+    randomize(var::View(result));
+    return result;
+  }
+
   const Random &randomize(var::View destination_data) const;
 
   template <class StringType> StringType to_string(size_t length) const {
@@ -46,11 +51,14 @@ public:
   API_NO_DISCARD var::Data to_data(u32 size) const;
 
 private:
+  static void deleter(void * context);
   using Api = api::Api<crypt_random_api_t, CRYPT_RANDOM_API_REQUEST>;
   static Api m_api;
 
+  static void * get_context();
   static Api &api() { return m_api; }
-  void *m_context = nullptr;
+
+  api::UniquePointer<void, decltype(&deleter)> m_context = {nullptr,nullptr};
 };
 
 } // namespace crypto

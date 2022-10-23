@@ -2,6 +2,7 @@
 #include <string.h>
 
 #if defined __link
+#include <sys/time.h>
 #include <time.h>
 #endif
 
@@ -220,24 +221,30 @@ static int ecc_dsa_verify(
 }
 
 int rng_function(uint8_t *dest, unsigned int size) {
-#if defined __link
 #if HAVE_ARC4RANDOM
   arc4random_buf(dest, size);
 #else
-  time_t t;
-  srand((unsigned)time(&t));
+#if defined __link
+  unsigned seed = 0;
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  seed = t.tv_usec;
+#else
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, clock_time));
+  seed = t.tv_nsec;
+#endif
+  srand(seed);
   for (unsigned int i = 0; i < size; i++) {
     dest[i] = rand();
   }
-#endif
-#else
-
 #endif
   return size;
 }
 
 const crypt_ecc_api_t micro_ecc_api = {
-  .sos_api = {.name = "micro_ecc", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
+  .sos_api
+  = {.name = "micro_ecc", .version = 0x0001, .git_hash = CMSDK_GIT_HASH},
   .init = ecc_init,
   .deinit = ecc_deinit,
   .dh_create_key_pair = ecc_dh_create_key_pair,

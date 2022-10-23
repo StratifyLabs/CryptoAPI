@@ -64,39 +64,17 @@ public:
       return result;
     }
 
-    Key() {
-      // 256-bit key length
-      Random().seed().randomize(var::View(m_key));
-      Random().seed().randomize(var::View(m_initialization_vector));
+    Key();
+    Key &nullify() &;
+    Key &&nullify() &&{
+      return std::move(nullify());
     }
-
-    Key &nullify() {
-      m_key.fill(0);
-      m_initialization_vector.fill(0);
-      return *this;
-    }
-
     API_NO_DISCARD bool is_null() const {
       return is_key_null() && is_iv_null();
     }
 
-    API_NO_DISCARD bool is_key_null() const {
-      for (auto value : m_key) {
-        if (value != 0) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    API_NO_DISCARD bool is_iv_null() const {
-      for (auto value : m_initialization_vector) {
-        if (value != 0) {
-          return false;
-        }
-      }
-      return true;
-    }
+    API_NO_DISCARD bool is_key_null() const;
+    API_NO_DISCARD bool is_iv_null() const;
 
     static constexpr const char *get_null_key256_string() {
       return "0000000000000000000000000000000000000000000000000000000000000000";
@@ -112,16 +90,9 @@ public:
 
     API_NO_DISCARD const Key256 &key256() const { return m_key; }
     API_NO_DISCARD Key256 get_key256() const { return m_key; }
-    API_NO_DISCARD Key128 get_key128() const {
-      Key128 result;
-      var::View(result).copy(m_key);
-      return result;
-    }
+    API_NO_DISCARD Key128 get_key128() const;
 
-    Key &set_key(const Key128 &key) {
-      var::View(m_key).fill(0).copy(var::View(key));
-      return *this;
-    }
+    Key &set_key(const Key128 &key);
 
     Key &set_key(const Key256 &key) {
       m_key = key;
@@ -150,17 +121,6 @@ public:
   };
 
   Aes();
-  ~Aes();
-
-  Aes(const Aes &a) = delete;
-  Aes &operator=(const Aes &aes) = delete;
-
-  Aes(Aes &&a) noexcept { std::swap(m_context, a.m_context); }
-
-  Aes &operator=(Aes &&a) noexcept {
-    std::swap(m_context, a.m_context);
-    return *this;
-  }
 
   Aes &set_key128(const var::View &key);
   Aes &set_key256(const var::View &key);
@@ -177,12 +137,7 @@ public:
   }
 
   static var::Data
-  get_padded_data(const var::View input, u8 padding_value = 0xff) {
-    const auto padding_size = get_padding(input.size());
-    auto result = var::Data(input.size() + padding_size);
-    var::View(result).fill<u8>(padding_value).copy(input);
-    return result;
-  }
+  get_padded_data(const var::View input, u8 padding_value = 0xff);
 
   class Crypt {
     API_AC(Crypt, var::View, plain);
@@ -195,17 +150,8 @@ public:
   const Aes &encrypt_ecb(const EncryptEcb &options) const;
   const Aes &decrypt_ecb(const DecryptEcb &options) const;
 
-  var::Data encrypt_ecb(var::View input) const {
-    var::Data result(input.size());
-    encrypt_ecb(Crypt().set_plain(input).set_cipher(var::View(result)));
-    return result;
-  }
-
-  var::Data decrypt_ecb(var::View input) const {
-    var::Data result(input.size());
-    decrypt_ecb(Crypt().set_cipher(input).set_plain(var::View(result)));
-    return result;
-  }
+  var::Data encrypt_ecb(var::View input) const;
+  var::Data decrypt_ecb(var::View input) const;
 
   using EncryptCbc = Crypt;
   using DecryptCbc = Crypt;
@@ -213,17 +159,8 @@ public:
   const Aes &encrypt_cbc(const EncryptCbc &options) const;
   const Aes &decrypt_cbc(const DecryptCbc &options) const;
 
-  var::Data encrypt_cbc(var::View input) const {
-    var::Data result(input.size());
-    encrypt_cbc(Crypt().set_plain(input).set_cipher(var::View(result)));
-    return result;
-  }
-
-  var::Data decrypt_cbc(var::View input) const {
-    var::Data result(input.size());
-    decrypt_cbc(Crypt().set_cipher(input).set_plain(var::View(result)));
-    return result;
-  }
+  var::Data encrypt_cbc(var::View input) const;
+  var::Data decrypt_cbc(var::View input) const;
 
 #if 0 // not yet implemented
   Aes &encrypt_ctr(const Crypt &options);
@@ -231,13 +168,15 @@ public:
 #endif
 
 private:
-  using Api = api::Api<crypt_aes_api_t, CRYPT_AES_API_REQUEST>;
-  static Api m_api;
+  struct State {
+    void * context;
+    InitializationVector initialization_vector;
+  };
+  static void deleter(State * state);
 
-  void *m_context = nullptr;
+  api::SystemResource<State, decltype(&deleter)> m_state = {};
   mutable InitializationVector m_initialization_vector;
 
-  static Api &api() { return m_api; }
 };
 
 template <class Derived> class AesAccess : public Aes {

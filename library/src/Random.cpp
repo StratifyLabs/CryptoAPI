@@ -14,18 +14,27 @@ Random::Random() {
     API_RETURN_ASSIGN_ERROR("missing api", ENOTSUP);
   } else {
     API_RETURN_IF_ERROR();
-    API_SYSTEM_CALL("random", api()->init(&m_context));
+    void * result = nullptr;
+    m_context = {get_context(), &deleter};
     API_RETURN_IF_ERROR();
     seed(var::View());
   }
 }
 
-Random::~Random() {
-  if (m_context != nullptr) {
-    api()->deinit(&m_context);
-    m_context = nullptr;
+void *Random::get_context() {
+  API_RETURN_VALUE_IF_ERROR(nullptr);
+  void * result = nullptr;
+  API_SYSTEM_CALL("random", api()->init(&result));
+  return result;
+}
+
+
+void Random::deleter(void * context) {
+  if (context != nullptr) {
+    api()->deinit(&context);
   }
 }
+
 
 Random &Random::seed() {
   var::Array<u32, 64> list{};
@@ -41,7 +50,7 @@ Random &Random::seed(const var::View source_data) {
   API_ASSERT(m_context != nullptr);
   API_SYSTEM_CALL(
     "",
-    api()->seed(m_context, source_data.to_const_u8(), source_data.size()));
+    api()->seed(m_context.get(), source_data.to_const_u8(), source_data.size()));
   return *this;
 }
 
@@ -51,7 +60,7 @@ const Random &Random::randomize(var::View destination_data) const {
   API_SYSTEM_CALL(
     "",
     api()
-      ->random(m_context, destination_data.to_u8(), destination_data.size()));
+      ->random(m_context.get(), destination_data.to_u8(), destination_data.size()));
   return *this;
 }
 

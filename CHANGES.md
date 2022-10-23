@@ -5,11 +5,13 @@
 - Add `doxygen` file for documentation generation
 - Update cmake to use `CMakeSDK` v2.0
 - Use `cmsdk2_` functions for build
+- Update to API v1.6
 
 
 ## Bug Fixes
 
 - Use `cpp` codeblocks rather than `c++` in markdown docs
+- Fix random number generator for signature algorithm
 
 # Version 1.2.0
 

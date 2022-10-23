@@ -4,22 +4,29 @@
 
 using namespace crypto;
 
-Sha256::Api Sha256::m_api;
+namespace {
+static auto &sha_api() {
+  static api::Api<crypt_hash_api_t, CRYPT_SHA256_API_REQUEST> instance;
+  return instance;
+}
+} // namespace
 
 Sha256::Sha256() {
-  if (!api().is_valid()) {
-    exit_fatal("api api missing");
+  if (!sha_api().is_valid()) {
+    exit_fatal("Sha256 api missing");
   }
   API_RETURN_IF_ERROR();
-  API_SYSTEM_CALL("", api()->init(&m_context));
+  void * context = nullptr;
+  API_SYSTEM_CALL("", sha_api()->init(&context));
   API_RETURN_IF_ERROR();
-  API_SYSTEM_CALL("", api()->start(m_context));
+  m_state = {State{context}, &deleter};
+  API_SYSTEM_CALL("", sha_api()->start(context));
   m_is_finished = false;
 }
 
-Sha256::~Sha256() {
-  if (m_context != nullptr) {
-    api()->deinit(&m_context);
+void Sha256::deleter(Sha256::State *state) {
+  if( state->context ){
+    sha_api()->deinit(&state->context);
   }
 }
 
@@ -29,8 +36,8 @@ const Sha256 &Sha256::update(const var::View &input) const {
   }
   API_RETURN_VALUE_IF_ERROR(*this);
   API_SYSTEM_CALL(
-    "",
-    api()->update(m_context, input.to_const_u8(), input.size()));
+    "Sha256::update",
+    sha_api()->update(m_state->context, input.to_const_u8(), input.size()));
   return *this;
 }
 
@@ -39,9 +46,9 @@ void Sha256::finish() const {
     API_RETURN_VALUE_IF_ERROR();
     m_is_finished = true;
     API_SYSTEM_CALL(
-      "",
-      api()->finish(
-        m_context,
+      "Sha256::finish",
+      sha_api()->finish(
+        m_state->context,
         (unsigned char *)m_output.data(),
         m_output.count()));
   }
@@ -86,4 +93,15 @@ bool Sha256::check_aligned_hash(const fs::FileObject &file_object) {
   Hash hash_read;
   file_object.read(hash_read);
   return hash_read == hash_calculated.output();
+}
+Sha256::Hash Sha256::from_string(const var::StringView value) {
+  API_ASSERT(value.length() == 64);
+  Hash result;
+  var::View(result).from_string(value);
+  return result;
+}
+Sha256::Hash Sha256::get_hash(const fs::FileObject &file) {
+  Sha256 hash;
+  fs::NullFile().write(file, hash);
+  return hash.output();
 }

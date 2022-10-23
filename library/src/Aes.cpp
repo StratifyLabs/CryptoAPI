@@ -19,20 +19,67 @@ Printer &operator<<(Printer &printer, const crypto::Aes::Key &a) {
 using namespace crypto;
 using namespace var;
 
-Aes::Api Aes::m_api;
+namespace {
+auto &aes_api() {
+  static api::Api<crypt_aes_api_t, CRYPT_AES_API_REQUEST> instance;
+  return instance;
+}
+} // namespace
+
+
+Aes::Key::Key() {
+  // 256-bit key length
+  Random().seed().randomize(var::View(m_key));
+  Random().seed().randomize(var::View(m_initialization_vector));
+}
+
+Aes::Key &Aes::Key::nullify() & {
+  m_key.fill(0);
+  m_initialization_vector.fill(0);
+  return *this;
+}
+bool Aes::Key::is_key_null() const {
+  for (auto value : m_key) {
+    if (value != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+bool Aes::Key::is_iv_null() const {
+  for (auto value : m_initialization_vector) {
+    if (value != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+Aes::Key128 Aes::Key::get_key128() const {
+  Key128 result;
+  var::View(result).copy(m_key);
+  return result;
+}
+Aes::Key &Aes::Key::set_key(const Aes::Key128 &key) {
+  var::View(m_key).fill(0).copy(var::View(key));
+  return *this;
+}
 
 Aes::Aes() {
-  if (api().is_valid() == false) {
+  if (!aes_api().is_valid()) {
     API_RETURN_ASSIGN_ERROR("missing api", ENOTSUP);
   }
   API_RETURN_IF_ERROR();
-  API_SYSTEM_CALL("", api()->init(&m_context));
+  void *result = nullptr;
+  API_SYSTEM_CALL("", aes_api()->init(&result));
+  API_RETURN_IF_ERROR();
+  m_state = {{result}, &deleter};
 }
 
-Aes::~Aes() {
-  m_initialization_vector.fill(0);
-  if (m_context != nullptr) {
-    api()->deinit(&m_context);
+void Aes::deleter(State *state) {
+  state->initialization_vector.fill(0);
+  if (state->context != nullptr) {
+    aes_api()->deinit(&state->context);
   }
 }
 
@@ -56,7 +103,7 @@ Aes &Aes::set_key128(const var::View &key) {
   API_RETURN_VALUE_IF_ERROR(*this);
   API_SYSTEM_CALL(
     "set_key128",
-    api()->set_key(m_context, key.to_const_u8(), key.size() * 8, 8));
+    aes_api()->set_key(m_state->context, key.to_const_u8(), key.size() * 8, 8));
   return *this;
 }
 
@@ -65,7 +112,7 @@ Aes &Aes::set_key256(const var::View &key) {
   API_RETURN_VALUE_IF_ERROR(*this);
   API_SYSTEM_CALL(
     "set_key256",
-    api()->set_key(m_context, key.to_const_u8(), key.size() * 8, 8));
+    aes_api()->set_key(m_state->context, key.to_const_u8(), key.size() * 8, 8));
   return *this;
 }
 
@@ -76,8 +123,8 @@ const Aes &Aes::encrypt_ecb(const Crypt &options) const {
 
   for (u32 i = 0; i < options.plain().size(); i += 16) {
     if (
-      api()->encrypt_ecb(
-        m_context,
+      aes_api()->encrypt_ecb(
+        m_state->context,
         options.plain().to_const_u8() + i,
         View(options.cipher()).to_u8() + i)
       < 0) {
@@ -99,8 +146,8 @@ const Aes &Aes::decrypt_ecb(const Crypt &options) const {
     if (
       API_SYSTEM_CALL(
         "decrypt_ecb",
-        api()->decrypt_ecb(
-          m_context,
+        aes_api()->decrypt_ecb(
+          m_state->context,
           options.cipher().to_const_u8() + i,
           View(options.plain()).to_u8() + i))
       < 0) {
@@ -118,8 +165,8 @@ const Aes &Aes::encrypt_cbc(const Crypt &options) const {
 
   API_SYSTEM_CALL(
     "encrypt_cbc",
-    api()->encrypt_cbc(
-      m_context,
+    aes_api()->encrypt_cbc(
+      m_state->context,
       options.plain().size(),
       m_initialization_vector.data(), // init vector
       options.plain().to_const_u8(),
@@ -135,14 +182,41 @@ const Aes &Aes::decrypt_cbc(const Crypt &options) const {
 
   API_SYSTEM_CALL(
     "decrypt_cbc",
-    api()->decrypt_cbc(
-      m_context,
+    aes_api()->decrypt_cbc(
+      m_state->context,
       options.plain().size(),
       m_initialization_vector.data(), // init vector
       options.cipher().to_const_u8(),
       View(options.plain()).to_u8()));
 
   return *this;
+}
+var::Data Aes::encrypt_cbc(var::View input) const {
+  var::Data result(input.size());
+  encrypt_cbc(Crypt().set_plain(input).set_cipher(var::View(result)));
+  return result;
+}
+var::Data Aes::decrypt_cbc(var::View input) const {
+  var::Data result(input.size());
+  decrypt_cbc(Crypt().set_cipher(input).set_plain(var::View(result)));
+  return result;
+}
+var::Data Aes::decrypt_ecb(var::View input) const {
+  var::Data result(input.size());
+  decrypt_ecb(Crypt().set_cipher(input).set_plain(var::View(result)));
+  return result;
+}
+var::Data Aes::encrypt_ecb(var::View input) const {
+  var::Data result(input.size());
+  encrypt_ecb(Crypt().set_plain(input).set_cipher(var::View(result)));
+  return result;
+}
+
+var::Data Aes::get_padded_data(const var::View input, u8 padding_value) {
+  const auto padding_size = get_padding(input.size());
+  auto result = var::Data(input.size() + padding_size);
+  var::View(result).fill<u8>(padding_value).copy(input);
+  return result;
 }
 
 int AesCbcEncrypter::transform(
