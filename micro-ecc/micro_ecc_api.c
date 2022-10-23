@@ -4,6 +4,9 @@
 #if defined __link
 #include <sys/time.h>
 #include <time.h>
+#else
+#include <cortexm/cortexm.h>
+#include <sos/config.h>
 #endif
 
 #include <stdlib.h>
@@ -220,24 +223,46 @@ static int ecc_dsa_verify(
     c->curve);
 }
 
+#if !defined __link
+typedef struct {
+  void *dest;
+  unsigned size;
+} randomize_t;
+
+static void randomize(void *args) {
+  randomize_t *r = (randomize_t *)args;
+  const crypt_random_api_t *random_api
+    = sos_config.sys.kernel_request_api(CRYPT_RANDOM_ROOT_API_REQUEST);
+  void *context;
+  if( random_api ) {
+    random_api->init(&context);
+    if (context) {
+      random_api->random(context, r->dest, r->size);
+      random_api->deinit(&context);
+    }
+  } else {
+    memset(r->dest, 0, r->size);
+  }
+}
+
+#endif
+
 int rng_function(uint8_t *dest, unsigned int size) {
 #if HAVE_ARC4RANDOM
   arc4random_buf(dest, size);
 #else
 #if defined __link
-  unsigned seed = 0;
   struct timeval t;
   gettimeofday(&t, NULL);
-  seed = t.tv_usec;
-#else
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, clock_time));
-  seed = t.tv_nsec;
-#endif
-  srand(seed);
+  srand((unsigned)(t.tv_usec));
   for (unsigned int i = 0; i < size; i++) {
     dest[i] = rand();
   }
+#else
+  randomize_t args = {.dest = dest, .size = size};
+  cortexm_svcall(randomize, &args);
+#endif
+
 #endif
   return size;
 }
