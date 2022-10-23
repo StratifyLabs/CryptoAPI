@@ -1,12 +1,16 @@
+# Version 1.4.0
+
+## New Features
+
+- Use `cmsdk2_` functions for build
+- Update to API v1.6
+- Update cmake to use `CMakeSDK` v2.0
+
 # Version 1.3.0
 
 ## New Features
 
 - Add `doxygen` file for documentation generation
-- Update cmake to use `CMakeSDK` v2.0
-- Use `cmsdk2_` functions for build
-- Update to API v1.6
-
 
 ## Bug Fixes
 
