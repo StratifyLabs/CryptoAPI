@@ -50,21 +50,26 @@ cmsdk2_add_library(
   CONFIG debug
   ARCH ${CMSDK_ARCH}
   TARGET DEBUG_TARGET)
+
 cmsdk2_copy_target(
   SOURCE ${RELEASE_TARGET}
   DESTINATION ${DEBUG_TARGET})
+
 target_compile_options(${DEBUG_TARGET} PUBLIC ${API_PUBLIC_DEBUG_COMPILE_OPTIONS})
-if(CMSDK_IS_ARM)
-  cmsdk2_library_add_dependencies(
-    TARGET ${RELEASE_TARGET}
-    DEPENDENCIES StratifyOS_interface)
-  cmsdk2_library_add_dependencies(
-    TARGET ${DEBUG_TARGET}
-    DEPENDENCIES StratifyOS_interface)
-endif()
-if(CMSDK_IS_LINUX)
-  target_link_libraries(${DEBUG_TARGET} PRIVATE bsd)
-  target_link_libraries(${RELEASE_TARGET} PRIVATE bsd)
-endif()
+set(TARGET_LIST ${RELEASE_TARGET} ${DEBUG_TARGET})
+foreach(TARGET ${TARGET_LIST})
+  get_target_property(ARCH ${TARGET} CMSDK_PROPERTY_ARCH)
+  target_compile_definitions(${TARGET}
+    PUBLIC
+    __${ARCH})
+  if(CMSDK_IS_ARM)
+    cmsdk2_library_add_dependencies(
+      TARGET ${TARGET}
+      DEPENDENCIES StratifyOS_interface)
+  endif()
+  if(CMSDK_IS_LINUX)
+    target_link_libraries(${TARGET} PRIVATE bsd)
+  endif()
+endforeach()
 install(FILES ${PROJECT_NAME}.cmake
   DESTINATION ${CMSDK_LOCAL_PATH}/cmake/targets)
