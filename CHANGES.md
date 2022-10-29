@@ -1,3 +1,9 @@
+# Version 1.4.1 (unreleased)
+
+## Bug Fixes
+
+- Ensure minimum version values
+
 # Version 1.4.0
 
 ## New Features
