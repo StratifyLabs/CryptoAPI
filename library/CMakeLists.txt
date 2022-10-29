@@ -2,6 +2,12 @@ set(LIBRARIES VarAPI FsAPI InetAPI)
 if(${CMSDK_IS_LINK})
   list(APPEND LIBRARIES uECC)
 endif()
+
+cmsdk2_check_version(
+  NAME InetAPI
+  VERSION ${FsAPI_VERSION}
+  MINIMUM_VERSION 1.5.2)
+
 api2_add_library(
   NAME ${PROJECT_NAME}
   DEPENDENCIES ${LIBRARIES})
