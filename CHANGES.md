@@ -2,7 +2,7 @@
 
 ## Bug Fixes
 
-- Ensure minimum version values
+- Ensure minimum version values in CMake
 
 # Version 1.4.0
 
