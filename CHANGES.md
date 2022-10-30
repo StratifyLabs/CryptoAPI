@@ -1,8 +1,14 @@
-# Version 1.4.1 (unreleased)
+# Version 1.4.2
 
 ## Bug Fixes
 
 - Ensure minimum version values in CMake
+
+# Version 1.4.1
+
+## Bug Fixes
+
+- 1.4.0 was tagged to the wrong branch
 
 # Version 1.4.0
 
