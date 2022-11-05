@@ -5,19 +5,14 @@
 #include "UnitTest.hpp"
 
 #define VERSION "0.1"
-#include "sys/Cli.hpp"
+#include <sys/Cli.hpp>
 
 using namespace test;
-
-void segfault(int a) { API_ASSERT(false); }
 
 int main(int argc, char *argv[]) {
   sys::Cli cli(argc, argv);
 
-#if defined __link
-  signal(11, segfault);
-#endif
-
+  api::catch_segmentation_fault();
 
   {
     auto scope = Test::Scope<printer::Printer>(test::Test::Initialize()
