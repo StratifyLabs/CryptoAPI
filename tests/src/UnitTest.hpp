@@ -2,11 +2,10 @@
 
 #include <cstdio>
 
-#include "api/api.hpp"
-#include "chrono.hpp"
-#include "fs.hpp"
-#include "test/Test.hpp"
-#include "var.hpp"
+#include <api/api.hpp>
+#include <test/Test.hpp>
+#include <fs/DataFile.hpp>
+#include <fs/ViewFile.hpp>
 
 #include "crypto/Aes.hpp"
 #include "crypto/Ecc.hpp"
@@ -19,6 +18,8 @@ using R = crypto::Random;
 
 using namespace crypto;
 using namespace printer;
+using namespace fs;
+using namespace var;
 
 class UnitTest : public test::Test {
   bool random_api_case() {
